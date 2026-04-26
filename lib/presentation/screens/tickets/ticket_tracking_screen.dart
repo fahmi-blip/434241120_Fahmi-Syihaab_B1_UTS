@@ -7,6 +7,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../data/models/ticket_model.dart';
 import '../../../data/providers/providers.dart';
 import '../../../data/repositories/mock_ticket_repository.dart';
+import '../../widgets/common/app_navbar.dart';
 
 class TicketTrackingScreen extends ConsumerStatefulWidget {
   const TicketTrackingScreen({super.key});
@@ -66,11 +67,6 @@ class _TicketTrackingScreenState extends ConsumerState<TicketTrackingScreen> {
       appBar: AppBar(
         backgroundColor: isDark ? AppTheme.dark0 : AppTheme.surface1,
         elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_rounded,
-              size: 18, color: isDark ? AppTheme.white : AppTheme.accent),
-          onPressed: () => context.pop(),
-        ),
         title: Text(
           'Tracking Tiket',
           style: TextStyle(
@@ -150,6 +146,9 @@ class _TicketTrackingScreenState extends ConsumerState<TicketTrackingScreen> {
                     },
                   ),
                 ),
+      bottomNavigationBar: AppBottomNavBar(
+        currentRoute: '/tracking',
+      ),
     );
   }
 }

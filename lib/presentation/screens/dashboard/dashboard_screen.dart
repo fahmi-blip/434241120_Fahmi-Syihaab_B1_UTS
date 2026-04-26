@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../data/providers/providers.dart';
+import '../../widgets/common/app_navbar.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -14,7 +15,6 @@ class DashboardScreen extends ConsumerStatefulWidget {
 }
 
 class _DashboardScreenState extends ConsumerState<DashboardScreen> {
-  int _tab = 0;
   String? _userRole;
 
   @override
@@ -42,9 +42,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
     // Debug: print unread count
     print('🔔 Dashboard build - unreadCount: $unreadCount');
-
-    // Hanya user biasa yang bisa buat tiket
-    final canCreateTicket = _userRole == 'user';
 
     return Scaffold(
       backgroundColor: isDark ? AppTheme.dark0 : AppTheme.surface1,
@@ -172,8 +169,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     isDark: isDark,
                     canAccessAdmin:
                         _userRole == 'admin' || _userRole == 'helpdesk',
-                    onTrackingTap: () => context.push('/tracking'),
-                    onAdminTap: () => context.push('/admin/tickets'),
+                    onTrackingTap: () => context.go('/tracking'),
+                    onAdminTap: () => context.go('/admin/tickets'),
                   ),
                 ),
               ),
@@ -244,26 +241,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           ),
         ),
       ),
-      bottomNavigationBar: _BottomBar(
-        current: _tab,
-        onChanged: (i) {
-          setState(() => _tab = i);
-          switch (i) {
-            case 1:
-              context.push('/tickets');
-              break;
-            case 2:
-              context.push('/notifications');
-              break;
-            case 3:
-              context.push('/profile');
-              break;
-          }
-        },
-        isDark: isDark,
-        canCreateTicket: canCreateTicket,
-        onFab: () => context.push('/tickets/create'),
-        unreadCount: unreadCount,
+      bottomNavigationBar: AppBottomNavBar(
+        currentRoute: '/dashboard',
+        onCreateTicket: () => context.push('/tickets/create'),
       ),
     );
   }
@@ -837,258 +817,3 @@ class _ActionButtons extends StatelessWidget {
     );
   }
 }
-
-// ── Bottom Nav ────────────────────────────────────────────────────────────────
-
-class _BottomBar extends StatelessWidget {
-  final int current;
-  final ValueChanged<int> onChanged;
-  final VoidCallback onFab;
-  final bool isDark;
-  final bool canCreateTicket;
-  final int unreadCount;
-  const _BottomBar(
-      {required this.current,
-      required this.onChanged,
-      required this.onFab,
-      required this.isDark,
-      required this.canCreateTicket,
-      required this.unreadCount});
-
-  @override
-  Widget build(BuildContext context) {
-    // Layout berbeda berdasarkan role
-    if (canCreateTicket) {
-      // User biasa: 4 nav items + FAB di tengah
-      return _UserBottomNav(
-          current: current,
-          onChanged: onChanged,
-          onFab: onFab,
-          isDark: isDark,
-          unreadCount: unreadCount);
-    } else {
-      // Admin/Helpdesk: 4 nav items evenly distributed
-      return _AdminBottomNav(
-          current: current,
-          onChanged: onChanged,
-          isDark: isDark,
-          unreadCount: unreadCount);
-    }
-  }
-}
-
-// Navbar untuk user biasa (dengan FAB create tiket)
-class _UserBottomNav extends StatelessWidget {
-  final int current;
-  final ValueChanged<int> onChanged;
-  final VoidCallback onFab;
-  final bool isDark;
-  final int unreadCount;
-  const _UserBottomNav(
-      {required this.current,
-      required this.onChanged,
-      required this.onFab,
-      required this.isDark,
-      required this.unreadCount});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? AppTheme.dark1 : AppTheme.surface0,
-        border: Border(
-            top: BorderSide(
-                color: isDark ? AppTheme.dark3 : AppTheme.surface2,
-                width: 0.5)),
-      ),
-      child: SafeArea(
-        top: false,
-        child: SizedBox(
-          height: 60,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _NavItem(
-                  icon: Icons.grid_view_rounded,
-                  label: 'Dashboard',
-                  active: current == 0,
-                  onTap: () => onChanged(0),
-                  isDark: isDark),
-              _NavItem(
-                  icon: Icons.list_alt_rounded,
-                  label: 'Tiket',
-                  active: current == 1,
-                  onTap: () => onChanged(1),
-                  isDark: isDark),
-              // FAB center
-              GestureDetector(
-                onTap: onFab,
-                child: Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: isDark ? AppTheme.white : AppTheme.accent,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(Icons.add_rounded,
-                      size: 22,
-                      color: isDark ? AppTheme.black : AppTheme.white),
-                ),
-              ),
-              _NavItem(
-                  icon: Icons.notifications_outlined,
-                  label: 'Notifikasi',
-                  active: current == 2,
-                  onTap: () => onChanged(2),
-                  isDark: isDark,
-                  badgeCount: unreadCount),
-              _NavItem(
-                  icon: Icons.person_outline_rounded,
-                  label: 'Profil',
-                  active: current == 3,
-                  onTap: () => onChanged(3),
-                  isDark: isDark),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// Navbar untuk admin/helpdesk (tanpa FAB, evenly distributed)
-class _AdminBottomNav extends StatelessWidget {
-  final int current;
-  final ValueChanged<int> onChanged;
-  final bool isDark;
-  final int unreadCount;
-  const _AdminBottomNav(
-      {required this.current,
-      required this.onChanged,
-      required this.isDark,
-      required this.unreadCount});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? AppTheme.dark1 : AppTheme.surface0,
-        border: Border(
-            top: BorderSide(
-                color: isDark ? AppTheme.dark3 : AppTheme.surface2,
-                width: 0.5)),
-      ),
-      child: SafeArea(
-        top: false,
-        child: SizedBox(
-          height: 60,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _NavItem(
-                  icon: Icons.grid_view_rounded,
-                  label: 'Dashboard',
-                  active: current == 0,
-                  onTap: () => onChanged(0),
-                  isDark: isDark),
-              _NavItem(
-                  icon: Icons.list_alt_rounded,
-                  label: 'Tiket',
-                  active: current == 1,
-                  onTap: () => onChanged(1),
-                  isDark: isDark),
-              _NavItem(
-                  icon: Icons.notifications_outlined,
-                  label: 'Notifikasi',
-                  active: current == 2,
-                  onTap: () => onChanged(2),
-                  isDark: isDark,
-                  badgeCount: unreadCount),
-              _NavItem(
-                  icon: Icons.person_outline_rounded,
-                  label: 'Profil',
-                  active: current == 3,
-                  onTap: () => onChanged(3),
-                  isDark: isDark),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _NavItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final bool active;
-  final VoidCallback onTap;
-  final bool isDark;
-  final int? badgeCount;
-  const _NavItem(
-      {required this.icon,
-      required this.label,
-      required this.active,
-      required this.onTap,
-      required this.isDark,
-      this.badgeCount});
-
-  @override
-  Widget build(BuildContext context) {
-    final color = active
-        ? (isDark ? AppTheme.white : AppTheme.accent)
-        : (isDark ? AppTheme.textTertiaryDark : AppTheme.textTertiary);
-
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: SizedBox(
-        width: 56,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Icon(icon, size: 22, color: color),
-                if (badgeCount != null && badgeCount! > 0)
-                  Positioned(
-                    right: -8,
-                    top: -4,
-                    child: Container(
-                      padding: const EdgeInsets.all(3),
-                      decoration: const BoxDecoration(
-                        color: Colors.red,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Text(
-                        badgeCount! > 9 ? '9+' : badgeCount.toString(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 7,
-                          fontWeight: FontWeight.w700,
-                          height: 1,
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 9,
-                fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-                color: color,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ignore: non_constant_identifier_names
-IconData bell_outlined = Icons.notifications_outlined;

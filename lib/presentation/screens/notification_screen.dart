@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../data/providers/providers.dart';
 import '../../../data/repositories/mock_ticket_repository.dart';
+import '../widgets/common/app_navbar.dart';
 
 class NotificationScreen extends ConsumerStatefulWidget {
   const NotificationScreen({super.key});
@@ -28,7 +29,10 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
   Future<void> _load() async {
     try {
       final n = await _repo.getNotifications();
-      setState(() { _notifs = n; _loading = false; });
+      setState(() {
+        _notifs = n;
+        _loading = false;
+      });
     } catch (_) {
       setState(() => _loading = false);
     }
@@ -77,31 +81,52 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
         backgroundColor: isDark ? AppTheme.dark0 : AppTheme.surface1,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_rounded, size: 18, color: isDark ? AppTheme.white : AppTheme.accent),
+          icon: Icon(Icons.arrow_back_ios_rounded,
+              size: 18, color: isDark ? AppTheme.white : AppTheme.accent),
           onPressed: () => context.pop(),
         ),
-        title: Text('Notifikasi', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: isDark ? AppTheme.white : AppTheme.accent)),
+        title: Text('Notifikasi',
+            style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w700,
+                color: isDark ? AppTheme.white : AppTheme.accent)),
         actions: [
           if (unread > 0)
             TextButton(
               onPressed: _readAll,
               child: Text(
                 'Baca Semua',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: isDark ? AppTheme.textSecondaryDark : AppTheme.textSecondary),
+                style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: isDark
+                        ? AppTheme.textSecondaryDark
+                        : AppTheme.textSecondary),
               ),
             ),
         ],
       ),
       body: _loading
-          ? Center(child: CircularProgressIndicator(strokeWidth: 2, color: isDark ? AppTheme.white : AppTheme.black))
+          ? Center(
+              child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: isDark ? AppTheme.white : AppTheme.black))
           : _notifs.isEmpty
               ? Center(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.notifications_none_outlined, size: 40, color: isDark ? AppTheme.textTertiaryDark : AppTheme.textTertiary),
+                      Icon(Icons.notifications_none_outlined,
+                          size: 40,
+                          color: isDark
+                              ? AppTheme.textTertiaryDark
+                              : AppTheme.textTertiary),
                       const SizedBox(height: 12),
-                      Text('Belum ada notifikasi', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: isDark ? AppTheme.white : AppTheme.black)),
+                      Text('Belum ada notifikasi',
+                          style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: isDark ? AppTheme.white : AppTheme.black)),
                     ],
                   ),
                 )
@@ -121,12 +146,17 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
                           child: Container(
                             padding: const EdgeInsets.all(14),
                             decoration: BoxDecoration(
-                              color: isDark ? AppTheme.dark1 : AppTheme.surface0,
+                              color:
+                                  isDark ? AppTheme.dark1 : AppTheme.surface0,
                               borderRadius: BorderRadius.circular(14),
                               border: Border.all(
                                 color: isRead
-                                    ? (isDark ? AppTheme.dark3 : AppTheme.surface2)
-                                    : (isDark ? AppTheme.dark4 : AppTheme.surface3),
+                                    ? (isDark
+                                        ? AppTheme.dark3
+                                        : AppTheme.surface2)
+                                    : (isDark
+                                        ? AppTheme.dark4
+                                        : AppTheme.surface3),
                                 width: isRead ? 0.5 : 1,
                               ),
                             ),
@@ -136,26 +166,43 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
                                   width: 40,
                                   height: 40,
                                   decoration: BoxDecoration(
-                                    color: isRead ? (isDark ? AppTheme.dark2 : AppTheme.statusOpenBg) : (isDark ? AppTheme.dark3 : AppTheme.surface2),
+                                    color: isRead
+                                        ? (isDark
+                                            ? AppTheme.dark2
+                                            : AppTheme.statusOpenBg)
+                                        : (isDark
+                                            ? AppTheme.dark3
+                                            : AppTheme.surface2),
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                   child: Icon(
                                     _icon(n['title'] ?? ''),
                                     size: 18,
-                                    color: isRead ? (isDark ? AppTheme.textTertiaryDark : AppTheme.accent) : (isDark ? AppTheme.white : AppTheme.black),
+                                    color: isRead
+                                        ? (isDark
+                                            ? AppTheme.textTertiaryDark
+                                            : AppTheme.accent)
+                                        : (isDark
+                                            ? AppTheme.white
+                                            : AppTheme.black),
                                   ),
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         n['title'] ?? '',
                                         style: TextStyle(
                                           fontSize: 13,
-                                          fontWeight: isRead ? FontWeight.w500 : FontWeight.w700,
-                                          color: isDark ? AppTheme.white : AppTheme.black,
+                                          fontWeight: isRead
+                                              ? FontWeight.w500
+                                              : FontWeight.w700,
+                                          color: isDark
+                                              ? AppTheme.white
+                                              : AppTheme.black,
                                         ),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
@@ -163,14 +210,23 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
                                       const SizedBox(height: 2),
                                       Text(
                                         n['message'] ?? '',
-                                        style: TextStyle(fontSize: 12, color: isDark ? AppTheme.textSecondaryDark : AppTheme.textSecondary, height: 1.4),
+                                        style: TextStyle(
+                                            fontSize: 12,
+                                            color: isDark
+                                                ? AppTheme.textSecondaryDark
+                                                : AppTheme.textSecondary,
+                                            height: 1.4),
                                         maxLines: 2,
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
                                         _fmt(n['created_at']),
-                                        style: TextStyle(fontSize: 10, color: isDark ? AppTheme.textTertiaryDark : AppTheme.textTertiary),
+                                        style: TextStyle(
+                                            fontSize: 10,
+                                            color: isDark
+                                                ? AppTheme.textTertiaryDark
+                                                : AppTheme.textTertiary),
                                       ),
                                     ],
                                   ),
@@ -181,12 +237,18 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
                                     width: 7,
                                     height: 7,
                                     decoration: BoxDecoration(
-                                      color: isDark ? AppTheme.white : AppTheme.black,
+                                      color: isDark
+                                          ? AppTheme.white
+                                          : AppTheme.black,
                                       shape: BoxShape.circle,
                                     ),
                                   )
                                 else if (n['ticket_id'] != null)
-                                  Icon(Icons.chevron_right_rounded, size: 16, color: isDark ? AppTheme.textTertiaryDark : AppTheme.textTertiary),
+                                  Icon(Icons.chevron_right_rounded,
+                                      size: 16,
+                                      color: isDark
+                                          ? AppTheme.textTertiaryDark
+                                          : AppTheme.textTertiary),
                               ],
                             ),
                           ),
@@ -195,16 +257,23 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
                     },
                   ),
                 ),
+      bottomNavigationBar: AppBottomNavBar(
+        currentRoute: '/notifications',
+      ),
     );
   }
 
   IconData _icon(String title) {
     final l = title.toLowerCase();
-    if (l.contains('tiket') || l.contains('ticket')) return Icons.confirmation_number_outlined;
-    if (l.contains('komen') || l.contains('balas')) return Icons.chat_bubble_outline_rounded;
-    if (l.contains('status') || l.contains('update')) return Icons.update_rounded;
+    if (l.contains('tiket') || l.contains('ticket'))
+      return Icons.confirmation_number_outlined;
+    if (l.contains('komen') || l.contains('balas'))
+      return Icons.chat_bubble_outline_rounded;
+    if (l.contains('status') || l.contains('update'))
+      return Icons.update_rounded;
     if (l.contains('assign')) return Icons.person_add_outlined;
-    if (l.contains('selesai') || l.contains('resolved')) return Icons.check_circle_outline_rounded;
+    if (l.contains('selesai') || l.contains('resolved'))
+      return Icons.check_circle_outline_rounded;
     return Icons.notifications_outlined;
   }
 }

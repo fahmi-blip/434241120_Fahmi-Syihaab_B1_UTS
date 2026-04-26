@@ -5,6 +5,7 @@ import '../../../data/models/user_model.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/services/theme_service.dart';
 import '../../../data/providers/providers.dart';
+import '../widgets/common/app_navbar.dart';
 
 /// Clean Profile Screen - iOS Style
 /// No gradients, minimal design
@@ -183,14 +184,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             pinned: true,
             elevation: 0,
             backgroundColor: Colors.transparent,
-            leading: IconButton(
-              icon: Icon(
-                Icons.arrow_back_ios_new_rounded,
-                size: 18,
-                color: isDark ? AppTheme.white : AppTheme.white,
-              ),
-              onPressed: () => context.pop(),
-            ),
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
                 color: isDark ? AppTheme.dark0 : AppTheme.accent,
@@ -448,6 +441,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ),
           ),
         ],
+      ),
+      bottomNavigationBar: AppBottomNavBar(
+        currentRoute: '/profile',
       ),
     );
   }

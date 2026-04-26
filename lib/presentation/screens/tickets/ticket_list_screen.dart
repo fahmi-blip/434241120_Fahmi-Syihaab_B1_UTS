@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../data/models/ticket_model.dart';
 import '../../../data/providers/providers.dart';
+import '../../widgets/common/app_navbar.dart';
 
 class TicketListScreen extends ConsumerStatefulWidget {
   const TicketListScreen({super.key});
@@ -77,11 +78,6 @@ class _TicketListScreenState extends ConsumerState<TicketListScreen> {
             fontWeight: FontWeight.w700,
             color: isDark ? AppTheme.white : AppTheme.accent,
           ),
-        ),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_rounded,
-              size: 18, color: isDark ? AppTheme.white : AppTheme.accent),
-          onPressed: () => context.pop(),
         ),
         actions: [
           IconButton(
@@ -166,6 +162,11 @@ class _TicketListScreenState extends ConsumerState<TicketListScreen> {
       //             borderRadius: BorderRadius.circular(14)),
       //       )
       //     : null,
+      bottomNavigationBar: AppBottomNavBar(
+        currentRoute: '/tickets',
+        onCreateTicket:
+            canCreateTicket ? () => context.push('/tickets/create') : null,
+      ),
     );
   }
 

@@ -6,6 +6,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../data/models/ticket_model.dart';
 import '../../../data/providers/providers.dart';
 import '../../../data/repositories/mock_ticket_repository.dart';
+import '../../widgets/common/app_navbar.dart';
 
 class AdminTicketListScreen extends ConsumerStatefulWidget {
   const AdminTicketListScreen({super.key});
@@ -96,13 +97,8 @@ class _AdminTicketListScreenState extends ConsumerState<AdminTicketListScreen> {
           style: TextStyle(
             fontSize: 17,
             fontWeight: FontWeight.w700,
-            color: isDark ? AppTheme.white : AppTheme.black,
+            color: isDark ? AppTheme.white : AppTheme.accent,
           ),
-        ),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_rounded,
-              size: 18, color: isDark ? AppTheme.white : AppTheme.black),
-          onPressed: () => context.pop(),
         ),
         actions: [
           IconButton(
@@ -435,6 +431,9 @@ class _AdminTicketListScreenState extends ConsumerState<AdminTicketListScreen> {
                       ),
           ),
         ],
+      ),
+      bottomNavigationBar: AppBottomNavBar(
+        currentRoute: '/admin/tickets',
       ),
     );
   }
