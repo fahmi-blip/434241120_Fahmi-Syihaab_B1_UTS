@@ -733,7 +733,7 @@ class _ActionButtons extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.track_changes_rounded,
                     size: 20,
                     color: AppTheme.statusInProgress,
@@ -783,7 +783,7 @@ class _ActionButtons extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.manage_accounts_rounded,
                       size: 20,
                       color: AppTheme.priorityHigh,

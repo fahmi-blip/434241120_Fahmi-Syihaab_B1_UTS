@@ -53,10 +53,12 @@ class _TicketListScreenState extends ConsumerState<TicketListScreen> {
               t.description.toLowerCase().contains(q))
           .toList();
     }
-    if (_filterStatus != null)
+    if (_filterStatus != null) {
       list = list.where((t) => t.status == _filterStatus).toList();
-    if (_filterPriority != null)
+    }
+    if (_filterPriority != null) {
       list = list.where((t) => t.priority == _filterPriority).toList();
+    }
     return list;
   }
 

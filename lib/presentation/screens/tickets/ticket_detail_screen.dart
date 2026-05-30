@@ -53,12 +53,13 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
       print('👤 User role: $role');
       print('🔧 Is admin/helpdesk: ${role == 'admin' || role == 'helpdesk'}');
 
-      if (mounted)
+      if (mounted) {
         setState(() {
           _ticket = t;
           _userRole = role;
           _loading = false;
         });
+      }
     } catch (_) {
       if (mounted) setState(() => _loading = false);
     }
@@ -73,11 +74,12 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
     setState(() => _loadingHelpdesk = true);
     try {
       final list = await _repo.getHelpdeskList();
-      if (mounted)
+      if (mounted) {
         setState(() {
           _helpdeskList = list;
           _loadingHelpdesk = false;
         });
+      }
     } catch (_) {
       if (mounted) setState(() => _loadingHelpdesk = false);
     }
@@ -461,7 +463,7 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                           );
                         }),
                       ],
-                      value: t.assignedTo,
+                      initialValue: t.assignedTo,
                       onChanged: _submitting ? null : (v) => _assignTicket(v),
                     ),
                 ],

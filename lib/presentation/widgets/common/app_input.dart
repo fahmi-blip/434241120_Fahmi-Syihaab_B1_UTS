@@ -501,7 +501,7 @@ class AppDropdown<T> extends StatelessWidget {
                 onChanged: enabled ? onChanged : null,
                 validator: validator,
                 icon: icon ??
-                    Icon(
+                    const Icon(
                       Icons.keyboard_arrow_down_rounded,
                       color: ModernTheme.stone500,
                     ),
@@ -624,7 +624,7 @@ class _AppSearchInputState extends State<AppSearchInput> {
                           color: ModernTheme.primary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: Icon(
+                        child: const Icon(
                           Icons.close_rounded,
                           size: 18,
                           color: ModernTheme.primary,

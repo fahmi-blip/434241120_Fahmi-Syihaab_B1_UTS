@@ -479,7 +479,7 @@ class _MenuItemCardState extends State<MenuItemCard>
                 AnimatedRotation(
                   duration: const Duration(milliseconds: 200),
                   turns: _isHovered ? 0.05 : 0,
-                  child: Icon(
+                  child: const Icon(
                     Icons.chevron_right_rounded,
                     color: ModernTheme.stone400,
                   ),
@@ -625,7 +625,7 @@ class _TicketCardState extends State<TicketCard>
                           : ModernTheme.stone200.withValues(alpha: 0.5),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Icon(
+                    child: const Icon(
                       Icons.access_time_rounded,
                       size: 14,
                       color: ModernTheme.stone500,
@@ -642,7 +642,7 @@ class _TicketCardState extends State<TicketCard>
                   ),
                   const Spacer(),
                   if (widget.commentCount != null && widget.commentCount! > 0) ...[
-                    Icon(
+                    const Icon(
                       Icons.chat_bubble_outline_rounded,
                       size: 16,
                       color: ModernTheme.stone400,
@@ -735,7 +735,7 @@ class ProfileCard extends StatelessWidget {
             width: 56,
             height: 56,
             decoration: BoxDecoration(
-              gradient: LinearGradient(
+              gradient: const LinearGradient(
                 colors: [
                   ModernTheme.primary,
                   ModernTheme.primaryLight,
@@ -809,7 +809,7 @@ class ProfileCard extends StatelessWidget {
               ],
             ),
           ),
-          Icon(
+          const Icon(
             Icons.chevron_right_rounded,
             color: ModernTheme.stone400,
           ),

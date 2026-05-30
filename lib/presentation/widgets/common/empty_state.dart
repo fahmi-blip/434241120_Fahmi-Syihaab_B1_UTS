@@ -269,7 +269,7 @@ class _NotificationIllustration extends StatelessWidget {
                 shape: BoxShape.circle,
                 border: Border.all(color: ModernTheme.warning, width: 2),
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.notifications_none,
                 size: 32,
                 color: ModernTheme.warning,
@@ -302,7 +302,7 @@ class _SearchIllustration extends StatelessWidget {
                 shape: BoxShape.circle,
                 border: Border.all(color: ModernTheme.stone300, width: 2),
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.search,
                 size: 36,
                 color: ModernTheme.stone400,
@@ -333,7 +333,7 @@ class _NetworkIllustration extends StatelessWidget {
               color: ModernTheme.error.withValues(alpha: 0.3),
             ),
           ),
-          Positioned(
+          const Positioned(
             top: 35,
             left: 35,
             child: Icon(
@@ -368,7 +368,7 @@ class _ErrorIllustration extends StatelessWidget {
                 shape: BoxShape.circle,
                 border: Border.all(color: ModernTheme.error, width: 2),
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.close,
                 size: 36,
                 color: ModernTheme.error,
@@ -401,7 +401,7 @@ class _SuccessIllustration extends StatelessWidget {
                 shape: BoxShape.circle,
                 border: Border.all(color: ModernTheme.success, width: 2),
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.check,
                 size: 36,
                 color: ModernTheme.success,

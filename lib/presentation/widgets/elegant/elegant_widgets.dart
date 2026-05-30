@@ -535,7 +535,7 @@ class ElegantEmptyState extends StatelessWidget {
           children: [
             Container(
               padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: ElegantTheme.gray100,
                 shape: BoxShape.circle,
               ),

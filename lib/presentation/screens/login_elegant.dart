@@ -167,7 +167,7 @@ class _ElegantLoginScreenState extends ConsumerState<ElegantLoginScreen> {
                   // Divider
                   Row(
                     children: [
-                      Expanded(child: Divider(color: ElegantTheme.gray200)),
+                      const Expanded(child: Divider(color: ElegantTheme.gray200)),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         child: Text(
@@ -178,7 +178,7 @@ class _ElegantLoginScreenState extends ConsumerState<ElegantLoginScreen> {
                           ),
                         ),
                       ),
-                      Expanded(child: Divider(color: ElegantTheme.gray200)),
+                      const Expanded(child: Divider(color: ElegantTheme.gray200)),
                     ],
                   ),
                   const SizedBox(height: 24),

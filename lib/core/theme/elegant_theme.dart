@@ -150,7 +150,7 @@ class ElegantTheme {
       brightness: Brightness.light,
 
       // Color Scheme
-      colorScheme: ColorScheme.light(
+      colorScheme: const ColorScheme.light(
         primary: primary,
         secondary: primaryLight,
         surface: surface,
@@ -212,7 +212,7 @@ class ElegantTheme {
         style: OutlinedButton.styleFrom(
           foregroundColor: gray700,
           minimumSize: const Size(double.infinity, 52),
-          side: BorderSide(color: gray300, width: 1.5),
+          side: const BorderSide(color: gray300, width: 1.5),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
@@ -250,7 +250,7 @@ class ElegantTheme {
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: gray300, width: 1),
+          borderSide: const BorderSide(color: gray300, width: 1),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
@@ -315,7 +315,7 @@ class ElegantTheme {
       useMaterial3: true,
       brightness: Brightness.dark,
 
-      colorScheme: ColorScheme.dark(
+      colorScheme: const ColorScheme.dark(
         primary: primaryLight,
         secondary: primaryLight,
         surface: surfaceDark,
@@ -345,7 +345,7 @@ class ElegantTheme {
         color: surfaceDarkCard,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: gray800, width: 1),
+          side: const BorderSide(color: gray800, width: 1),
         ),
         margin: EdgeInsets.zero,
       ),

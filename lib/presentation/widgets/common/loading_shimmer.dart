@@ -74,7 +74,7 @@ class _ShimmerLoaderState extends State<ShimmerLoader>
 class _SlidingGradientTransform extends GradientTransform {
   final double slidePercent;
 
-  _SlidingGradientTransform({required this.slidePercent});
+  const _SlidingGradientTransform({required this.slidePercent});
 
   @override
   Matrix4? transform(Rect bounds, {TextDirection? textDirection}) {
@@ -97,10 +97,10 @@ class TicketCardShimmer extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: ModernTheme.stone200),
       ),
-      child: ShimmerLoader(
+      child: const ShimmerLoader(
         baseColor: ModernTheme.stone200,
         highlightColor: ModernTheme.stone100,
-        child: const Column(
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
@@ -187,13 +187,13 @@ class ListTileShimmer extends StatelessWidget {
               const _ShimmerBox(width: 48, height: 48, borderRadius: 24),
               const SizedBox(width: 16),
             ],
-            Expanded(
+            const Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const _ShimmerBox(width: 150, height: 16),
-                  const SizedBox(height: 8),
-                  const _ShimmerBox(width: 100, height: 14),
+                  _ShimmerBox(width: 150, height: 16),
+                  SizedBox(height: 8),
+                  _ShimmerBox(width: 100, height: 14),
                 ],
               ),
             ),

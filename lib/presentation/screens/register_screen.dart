@@ -184,8 +184,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     ),
                   ),
                   validator: (v) {
-                    if (v == null || v.isEmpty)
+                    if (v == null || v.isEmpty) {
                       return 'Konfirmasi password wajib diisi';
+                    }
                     if (v != _pass.text) return 'Password tidak cocok';
                     return null;
                   },

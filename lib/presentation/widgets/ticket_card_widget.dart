@@ -141,14 +141,14 @@ class TicketCardWidget extends StatelessWidget {
               const SizedBox(height: 12),
               Row(
                 children: [
-                  Icon(Icons.category_outlined, size: 16, color: AppTheme.textSecondaryLight),
+                  const Icon(Icons.category_outlined, size: 16, color: AppTheme.textSecondaryLight),
                   const SizedBox(width: 4),
                   Text(
                     ticket.category ?? 'General',
                     style: textTheme.bodySmall,
                   ),
                   const Spacer(),
-                  Icon(Icons.access_time, size: 16, color: AppTheme.textSecondaryLight),
+                  const Icon(Icons.access_time, size: 16, color: AppTheme.textSecondaryLight),
                   const SizedBox(width: 4),
                   Text(
                     utils.DateUtils.timeAgo(ticket.createdAt),

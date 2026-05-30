@@ -263,7 +263,7 @@ class ModernTheme {
 
     return base.copyWith(
       // Color Scheme
-      colorScheme: ColorScheme.light(
+      colorScheme: const ColorScheme.light(
         primary: primary,
         secondary: secondary,
         tertiary: accent,
@@ -343,7 +343,7 @@ class ModernTheme {
         style: OutlinedButton.styleFrom(
           foregroundColor: stone700,
           minimumSize: const Size(double.infinity, 56),
-          side: BorderSide(color: stone300, width: 1.5),
+          side: const BorderSide(color: stone300, width: 1.5),
           padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
@@ -383,7 +383,7 @@ class ModernTheme {
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: stone300, width: 1),
+          borderSide: const BorderSide(color: stone300, width: 1),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
@@ -443,7 +443,7 @@ class ModernTheme {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
-        side: BorderSide(color: stone200, width: 1),
+        side: const BorderSide(color: stone200, width: 1),
       ),
 
       // Dialog - Modern rounded
@@ -466,7 +466,7 @@ class ModernTheme {
       ),
 
       // Divider
-      dividerTheme: DividerThemeData(
+      dividerTheme: const DividerThemeData(
         color: stone200,
         thickness: 1,
         space: 1,
@@ -525,7 +525,7 @@ class ModernTheme {
       ),
 
       // Progress Indicator
-      progressIndicatorTheme: ProgressIndicatorThemeData(
+      progressIndicatorTheme: const ProgressIndicatorThemeData(
         color: primary,
         linearTrackColor: stone200,
         circularTrackColor: stone200,
@@ -539,12 +539,12 @@ class ModernTheme {
     final textTheme = _buildTextTheme(true);
 
     return base.copyWith(
-      colorScheme: ColorScheme.dark(
+      colorScheme: const ColorScheme.dark(
         primary: primaryLight,
         secondary: secondaryLight,
         tertiary: accentLight,
         surface: surfaceDark,
-        error: const Color(0xFFFECDD3),
+        error: Color(0xFFFECDD3),
         onPrimary: stone900,
         onSecondary: stone900,
         onSurface: stone50,
@@ -780,7 +780,7 @@ class ModernTheme {
         }),
       ),
 
-      progressIndicatorTheme: ProgressIndicatorThemeData(
+      progressIndicatorTheme: const ProgressIndicatorThemeData(
         color: primaryLight,
         linearTrackColor: stone700,
         circularTrackColor: stone700,

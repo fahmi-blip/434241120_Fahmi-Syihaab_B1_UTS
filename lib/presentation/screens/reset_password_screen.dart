@@ -29,11 +29,12 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
     setState(() => _loading = true);
     try {
       await ref.read(authRepoProvider).resetPassword(_email.text.trim());
-      if (mounted)
+      if (mounted) {
         setState(() {
           _sent = true;
           _loading = false;
         });
+      }
     } catch (e) {
       if (mounted) {
         setState(() => _loading = false);

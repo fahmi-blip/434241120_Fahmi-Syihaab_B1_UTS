@@ -257,7 +257,7 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
                     },
                   ),
                 ),
-      bottomNavigationBar: AppBottomNavBar(
+      bottomNavigationBar: const AppBottomNavBar(
         currentRoute: '/notifications',
       ),
     );
@@ -265,15 +265,19 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
 
   IconData _icon(String title) {
     final l = title.toLowerCase();
-    if (l.contains('tiket') || l.contains('ticket'))
+    if (l.contains('tiket') || l.contains('ticket')) {
       return Icons.confirmation_number_outlined;
-    if (l.contains('komen') || l.contains('balas'))
+    }
+    if (l.contains('komen') || l.contains('balas')) {
       return Icons.chat_bubble_outline_rounded;
-    if (l.contains('status') || l.contains('update'))
+    }
+    if (l.contains('status') || l.contains('update')) {
       return Icons.update_rounded;
+    }
     if (l.contains('assign')) return Icons.person_add_outlined;
-    if (l.contains('selesai') || l.contains('resolved'))
+    if (l.contains('selesai') || l.contains('resolved')) {
       return Icons.check_circle_outline_rounded;
+    }
     return Icons.notifications_outlined;
   }
 }

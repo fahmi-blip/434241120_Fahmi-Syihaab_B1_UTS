@@ -146,7 +146,7 @@ class _TicketTrackingScreenState extends ConsumerState<TicketTrackingScreen> {
                     },
                   ),
                 ),
-      bottomNavigationBar: AppBottomNavBar(
+      bottomNavigationBar: const AppBottomNavBar(
         currentRoute: '/tracking',
       ),
     );

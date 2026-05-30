@@ -61,7 +61,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 color: isDark ? AppTheme.dark2 : AppTheme.surface1,
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.logout_rounded,
                 color: AppTheme.priorityHigh,
                 size: 18,
@@ -442,7 +442,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
         ],
       ),
-      bottomNavigationBar: AppBottomNavBar(
+      bottomNavigationBar: const AppBottomNavBar(
         currentRoute: '/profile',
       ),
     );

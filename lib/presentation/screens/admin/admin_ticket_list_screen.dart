@@ -73,12 +73,15 @@ class _AdminTicketListScreenState extends ConsumerState<AdminTicketListScreen> {
               t.description.toLowerCase().contains(q))
           .toList();
     }
-    if (_filterStatus != null)
+    if (_filterStatus != null) {
       list = list.where((t) => t.status == _filterStatus).toList();
-    if (_filterPriority != null)
+    }
+    if (_filterPriority != null) {
       list = list.where((t) => t.priority == _filterPriority).toList();
-    if (_filterAssigned != null)
+    }
+    if (_filterAssigned != null) {
       list = list.where((t) => t.assignedTo == _filterAssigned).toList();
+    }
     return list;
   }
 
@@ -374,7 +377,7 @@ class _AdminTicketListScreenState extends ConsumerState<AdminTicketListScreen> {
                             ),
                           ),
                         );
-                      }).toList(),
+                      }),
                     ],
                   ),
                 ],
@@ -432,7 +435,7 @@ class _AdminTicketListScreenState extends ConsumerState<AdminTicketListScreen> {
           ),
         ],
       ),
-      bottomNavigationBar: AppBottomNavBar(
+      bottomNavigationBar: const AppBottomNavBar(
         currentRoute: '/admin/tickets',
       ),
     );

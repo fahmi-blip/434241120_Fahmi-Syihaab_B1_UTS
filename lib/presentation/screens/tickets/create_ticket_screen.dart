@@ -136,8 +136,9 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                 hint: 'Contoh: Printer tidak berfungsi',
                 isDark: isDark,
                 validator: (v) {
-                  if (v == null || v.trim().length < 5)
+                  if (v == null || v.trim().length < 5) {
                     return 'Minimal 5 karakter';
+                  }
                   return null;
                 },
               ),
@@ -152,8 +153,9 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                 isDark: isDark,
                 maxLines: 5,
                 validator: (v) {
-                  if (v == null || v.trim().length < 10)
+                  if (v == null || v.trim().length < 10) {
                     return 'Minimal 10 karakter';
+                  }
                   return null;
                 },
               ),

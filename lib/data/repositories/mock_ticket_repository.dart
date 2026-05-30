@@ -51,8 +51,8 @@ class MockTicketRepository {
     {
       'id': 'ticket-1',
       'ticket_no': 'TKT-001',
-      'title': 'WiFi tidak bisa connect di lobby',
-      'description': 'Sudah coba connect beberapa kali tapi selalu gagal. Padahal password sudah benar.',
+      'title': 'WiFi tidak bisa connect di ruang tamu',
+      'description': 'Wifi connect tapi internet no connection.',
       'category': 'Network',
       'priority': 'high',
       'status': 'open',
