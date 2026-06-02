@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../repositories/mock_ticket_repository.dart';
-import '../repositories/mock_auth_repository.dart';
 import '../models/ticket_model.dart';
 import '../models/user_model.dart';
+import '../repositories/supabase_auth_repository.dart';
+import '../repositories/supabase_ticket_repository.dart';
 
 // ==================== REPOSITORY PROVIDERS ====================
-final ticketRepoProvider = Provider<MockTicketRepository>((ref) {
-  return MockTicketRepository();
+final ticketRepoProvider = Provider<SupabaseTicketRepository>((ref) {
+  return SupabaseTicketRepository();
 });
 
-final authRepoProvider = Provider<MockAuthRepository>((ref) {
-  return MockAuthRepository();
+final authRepoProvider = Provider<SupabaseAuthRepository>((ref) {
+  return SupabaseAuthRepository();
 });
 
 // ==================== AUTH PROVIDERS ====================
@@ -37,13 +37,14 @@ final currentUserProvider = FutureProvider<UserModel?>((ref) async {
   );
 });
 
-final authNotifierProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
+final authNotifierProvider =
+    StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   final authRepo = ref.read(authRepoProvider);
-  return AuthNotifier(authRepo);
+  return AuthNotifier(authRepo as SupabaseAuthRepository);
 });
 
 class AuthNotifier extends StateNotifier<AuthState> {
-  final MockAuthRepository _authRepo;
+  final SupabaseAuthRepository _authRepo;
 
   AuthNotifier(this._authRepo) : super(AuthState.initial());
 
@@ -128,7 +129,8 @@ class AuthState {
 }
 
 // ==================== TICKET PROVIDERS ====================
-final ticketsProvider = StateNotifierProvider<TicketsNotifier, TicketsState>((ref) {
+final ticketsProvider =
+    StateNotifierProvider<TicketsNotifier, TicketsState>((ref) {
   final repo = ref.read(ticketRepoProvider);
   return TicketsNotifier(repo);
 });
@@ -141,14 +143,15 @@ final ticketStatsProvider = Provider<Map<String, int>>((ref) {
   return ref.watch(ticketsProvider).stats;
 });
 
-final filteredTicketsProvider = Provider.family<List<TicketModel>, String?>((ref, status) {
+final filteredTicketsProvider =
+    Provider.family<List<TicketModel>, String?>((ref, status) {
   final allTickets = ref.watch(ticketListProvider);
   if (status == null || status == 'all') return allTickets;
   return allTickets.where((t) => t.status == status).toList();
 });
 
 class TicketsNotifier extends StateNotifier<TicketsState> {
-  final MockTicketRepository _repo;
+  final SupabaseTicketRepository _repo;
 
   TicketsNotifier(this._repo) : super(TicketsState.initial()) {
     _loadTickets();
@@ -182,11 +185,12 @@ class TicketsNotifier extends StateNotifier<TicketsState> {
 
   List<TicketModel> searchTickets(String query) {
     final lowerQuery = query.toLowerCase();
-    return state.tickets.where((t) =>
-      t.title.toLowerCase().contains(lowerQuery) ||
-      t.description.toLowerCase().contains(lowerQuery) ||
-      (t.category?.toLowerCase().contains(lowerQuery) ?? false)
-    ).toList();
+    return state.tickets
+        .where((t) =>
+            t.title.toLowerCase().contains(lowerQuery) ||
+            t.description.toLowerCase().contains(lowerQuery) ||
+            (t.category?.toLowerCase().contains(lowerQuery) ?? false))
+        .toList();
   }
 
   TicketModel? getTicketById(String id) {
@@ -224,7 +228,8 @@ class TicketsNotifier extends StateNotifier<TicketsState> {
     }
   }
 
-  Future<void> updateTicketStatus(String ticketId, String newStatus, {String? note}) async {
+  Future<void> updateTicketStatus(String ticketId, String newStatus,
+      {String? note}) async {
     state = state.copyWith(isSubmitting: true);
 
     try {
@@ -304,13 +309,14 @@ final themeModeProvider = StateProvider<ThemeMode>((ref) {
 // ==================== NOTIFICATION PROVIDER ====================
 final unreadCountProvider = StateProvider<int>((ref) => 0);
 
-final notificationNotifierProvider = StateNotifierProvider<NotificationNotifier, int>((ref) {
+final notificationNotifierProvider =
+    StateNotifierProvider<NotificationNotifier, int>((ref) {
   final repo = ref.read(ticketRepoProvider);
   return NotificationNotifier(repo);
 });
 
 class NotificationNotifier extends StateNotifier<int> {
-  final MockTicketRepository _repo;
+  final SupabaseTicketRepository _repo;
 
   NotificationNotifier(this._repo) : super(0) {
     _loadUnreadCount();

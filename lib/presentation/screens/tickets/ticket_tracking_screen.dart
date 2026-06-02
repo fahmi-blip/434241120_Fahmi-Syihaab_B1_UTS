@@ -6,7 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../data/models/ticket_model.dart';
 import '../../../data/providers/providers.dart';
-import '../../../data/repositories/mock_ticket_repository.dart';
+import '../../../data/repositories/supabase_ticket_repository.dart';
 import '../../widgets/common/app_navbar.dart';
 
 class TicketTrackingScreen extends ConsumerStatefulWidget {
@@ -18,7 +18,7 @@ class TicketTrackingScreen extends ConsumerStatefulWidget {
 }
 
 class _TicketTrackingScreenState extends ConsumerState<TicketTrackingScreen> {
-  late MockTicketRepository _repo;
+  late SupabaseTicketRepository _repo;
   List<TicketModel> _tickets = [];
   bool _loading = true;
   String? _userRole;

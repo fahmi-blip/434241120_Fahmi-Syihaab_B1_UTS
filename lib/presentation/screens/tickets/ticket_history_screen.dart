@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../data/models/ticket_model.dart';
 import '../../../data/providers/providers.dart';
-import '../../../data/repositories/mock_ticket_repository.dart';
+import '../../../data/repositories/supabase_ticket_repository.dart';
 
 class TicketHistoryScreen extends ConsumerStatefulWidget {
   final String ticketId;
@@ -17,7 +17,7 @@ class TicketHistoryScreen extends ConsumerStatefulWidget {
 }
 
 class _TicketHistoryScreenState extends ConsumerState<TicketHistoryScreen> {
-  late MockTicketRepository _repo;
+  late SupabaseTicketRepository _repo;
   TicketModel? _ticket;
   List<Map<String, dynamic>> _history = [];
   bool _loading = true;

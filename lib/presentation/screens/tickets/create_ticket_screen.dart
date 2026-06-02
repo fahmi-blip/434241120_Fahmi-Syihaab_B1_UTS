@@ -6,7 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../data/providers/providers.dart';
-import '../../../data/repositories/mock_ticket_repository.dart';
+import '../../../data/repositories/supabase_ticket_repository.dart';
 
 class CreateTicketScreen extends ConsumerStatefulWidget {
   const CreateTicketScreen({super.key});
@@ -25,7 +25,7 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
   final List<File> _files = [];
   bool _loading = false;
 
-  late MockTicketRepository _repo;
+  late SupabaseTicketRepository _repo;
 
   @override
   void initState() {

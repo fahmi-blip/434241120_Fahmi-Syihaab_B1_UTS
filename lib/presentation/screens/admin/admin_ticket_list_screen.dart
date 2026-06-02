@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../data/models/ticket_model.dart';
 import '../../../data/providers/providers.dart';
-import '../../../data/repositories/mock_ticket_repository.dart';
+import '../../../data/repositories/supabase_ticket_repository.dart';
 import '../../widgets/common/app_navbar.dart';
 
 class AdminTicketListScreen extends ConsumerStatefulWidget {
@@ -17,7 +17,7 @@ class AdminTicketListScreen extends ConsumerStatefulWidget {
 }
 
 class _AdminTicketListScreenState extends ConsumerState<AdminTicketListScreen> {
-  late MockTicketRepository _repo;
+  late SupabaseTicketRepository _repo;
   final _search = TextEditingController();
   String? _filterStatus;
   String? _filterPriority;

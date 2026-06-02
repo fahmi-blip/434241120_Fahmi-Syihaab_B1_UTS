@@ -7,7 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../data/models/ticket_model.dart';
 import '../../../data/providers/providers.dart';
-import '../../../data/repositories/mock_ticket_repository.dart';
+import '../../../data/repositories/supabase_ticket_repository.dart';
 
 class TicketDetailScreen extends ConsumerStatefulWidget {
   final String ticketId;
@@ -18,7 +18,7 @@ class TicketDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
-  late MockTicketRepository _repo;
+  late SupabaseTicketRepository _repo;
   final _commentCtrl = TextEditingController();
   TicketModel? _ticket;
   bool _loading = true;

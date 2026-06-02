@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import '../../../core/theme/app_theme.dart';
-import '../../../data/providers/providers.dart';
-import '../../../data/repositories/mock_ticket_repository.dart';
+import '../../core/theme/app_theme.dart';
+import '../../data/providers/providers.dart';
+import '../../data/repositories/supabase_ticket_repository.dart';
 import '../widgets/common/app_navbar.dart';
 
 class NotificationScreen extends ConsumerStatefulWidget {
@@ -15,7 +15,7 @@ class NotificationScreen extends ConsumerStatefulWidget {
 }
 
 class _NotificationScreenState extends ConsumerState<NotificationScreen> {
-  late MockTicketRepository _repo;
+  late SupabaseTicketRepository _repo;
   List<dynamic> _notifs = [];
   bool _loading = true;
 
