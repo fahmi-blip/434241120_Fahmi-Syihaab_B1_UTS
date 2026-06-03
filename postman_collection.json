@@ -1,0 +1,423 @@
+{
+  "info": {
+    "_postman_id": "e-ticketing-api-collection",
+    "name": "E-Ticketing Helpdesk API",
+    "description": "Complete API collection for E-Ticketing Helpdesk Mobile App\n\nBase URL: Supabase REST API\nVersion: 1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth Endpoints",
+      "description": "Authentication related endpoints",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/v1/token?grant_type=password",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "v1", "token"],
+              "query": [
+                {
+                  "key": "grant_type",
+                  "value": "password"
+                }
+              ]
+            },
+            "description": "Login user dengan email dan password"
+          },
+          "response": []
+        },
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\",\n  \"phone\": \"+6281234567890\",\n  \"department\": \"IT\",\n  \"role\": \"user\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/v1/signup",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "v1", "signup"]
+            },
+            "description": "Register user baru ke sistem"
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/v1/logout",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "v1", "logout"]
+            },
+            "description": "Logout user dan invalidate token"
+          },
+          "response": []
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/v1/recover",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "v1", "recover"]
+            },
+            "description": "Send password reset email"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rest/v1/profiles?select=*",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "profiles"],
+              "query": [
+                {
+                  "key": "select",
+                  "value": "*"
+                }
+              ]
+            },
+            "description": "Ambil data user yang sedang login"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Doe Updated\",\n  \"phone\": \"+6281234567890\",\n  \"department\": \"IT Ops\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/rest/v1/profiles?id=eq.{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "profiles"],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "eq.{{user_id}}"
+                }
+              ]
+            },
+            "description": "Update user profile data"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Ticket Endpoints",
+      "description": "Ticket management endpoints",
+      "item": [
+        {
+          "name": "Get All Tickets",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rest/v1/tickets?select=*,user:profiles!tickets_user_id_fkey(id,name,email,role),assignee:profiles!tickets_assigned_to_fkey(id,name,email,role),ticket_comments(id,content,user_id,created_at,is_internal,user:profiles(id,name,role)),ticket_attachments(id,file_url,file_name,file_type,created_at),ticket_history(id,old_status,new_status,note,changed_by,created_at,user:profiles!ticket_history_changed_by_fkey(id,name))&order=created_at.desc&limit=20&offset=0",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "tickets"],
+              "query": [
+                {
+                  "key": "select",
+                  "value": "*,user:profiles!tickets_user_id_fkey(id,name,email,role),assignee:profiles!tickets_assigned_to_fkey(id,name,email,role),ticket_comments(id,content,user_id,created_at,is_internal,user:profiles(id,name,role)),ticket_attachments(id,file_url,file_name,file_type,created_at),ticket_history(id,old_status,new_status,note,changed_by,created_at,user:profiles!ticket_history_changed_by_fkey(id,name))"
+                },
+                {
+                  "key": "status",
+                  "value": "open",
+                  "disabled": true
+                },
+                {
+                  "key": "priority",
+                  "value": "high",
+                  "disabled": true
+                },
+                {
+                  "key": "order",
+                  "value": "created_at.desc"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                }
+              ]
+            },
+            "description": "Ambil daftar semua tiket dengan filter"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Ticket Detail",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rest/v1/tickets?id=eq.{{ticket_id}}&select=*,user:profiles!tickets_user_id_fkey(id,name,email,role),assignee:profiles!tickets_assigned_to_fkey(id,name,email,role),ticket_comments(id,content,user_id,created_at,is_internal,user:profiles(id,name,role)),ticket_attachments(id,file_url,file_name,file_type,created_at),ticket_history(id,old_status,new_status,note,changed_by,created_at,user:profiles!ticket_history_changed_by_fkey(id,name))",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "tickets"],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "eq.{{ticket_id}}"
+                },
+                {
+                  "key": "select",
+                  "value": "*,user:profiles!tickets_user_id_fkey(id,name,email,role),assignee:profiles!tickets_assigned_to_fkey(id,name,email,role),ticket_comments(id,content,user_id,created_at,is_internal,user:profiles(id,name,role)),ticket_attachments(id,file_url,file_name,file_type,created_at),ticket_history(id,old_status,new_status,note,changed_by,created_at,user:profiles!ticket_history_changed_by_fkey(id,name))"
+                }
+              ]
+            },
+            "description": "Ambil detail ticket berdasarkan ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Ticket",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Cannot login\",\n  \"description\": \"I cannot login to the system\",\n  \"category\": \"technical\",\n  \"priority\": \"high\",\n  \"status\": \"open\",\n  \"user_id\": \"{{user_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/rest/v1/tickets",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "tickets"]
+            },
+            "description": "Buat ticket baru"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Ticket",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Cannot login - UPDATED\",\n  \"status\": \"in_progress\",\n  \"priority\": \"critical\",\n  \"assigned_to\": \"admin-456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/rest/v1/tickets?id=eq.{{ticket_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "tickets"],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "eq.{{ticket_id}}"
+                }
+              ]
+            },
+            "description": "Update ticket"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Ticket",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rest/v1/tickets?id=eq.{{ticket_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "tickets"],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "eq.{{ticket_id}}"
+                }
+              ]
+            },
+            "description": "Hapus ticket"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Comment Endpoints",
+      "description": "Comment management endpoints",
+      "item": [
+        {
+          "name": "Add Comment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ticket_id\": \"{{ticket_id}}\",\n  \"user_id\": \"{{user_id}}\",\n  \"content\": \"Please check this issue\",\n  \"is_internal\": false\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/rest/v1/ticket_comments",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "ticket_comments"]
+            },
+            "description": "Tambah komentar ke ticket"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Comments",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rest/v1/ticket_comments?ticket_id=eq.{{ticket_id}}&select=*,user:profiles(id,name,role)&order=created_at.asc",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "ticket_comments"],
+              "query": [
+                {
+                  "key": "ticket_id",
+                  "value": "eq.{{ticket_id}}"
+                },
+                {
+                  "key": "select",
+                  "value": "*,user:profiles(id,name,role)"
+                },
+                {
+                  "key": "order",
+                  "value": "created_at.asc"
+                }
+              ]
+            },
+            "description": "Ambil semua komentar untuk ticket"
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://your-project.supabase.co",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "ticket_id",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

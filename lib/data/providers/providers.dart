@@ -40,7 +40,7 @@ final currentUserProvider = FutureProvider<UserModel?>((ref) async {
 final authNotifierProvider =
     StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   final authRepo = ref.read(authRepoProvider);
-  return AuthNotifier(authRepo as SupabaseAuthRepository);
+  return AuthNotifier(authRepo);
 });
 
 class AuthNotifier extends StateNotifier<AuthState> {
