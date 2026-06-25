@@ -1,0 +1,71 @@
+-- Enable UUID extension if available
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- 1. PROFILES TABLE
+CREATE TABLE IF NOT EXISTS profiles (
+    id VARCHAR(255) PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    phone VARCHAR(50),
+    department VARCHAR(100),
+    role VARCHAR(50) NOT NULL DEFAULT 'user', -- 'user', 'support', 'admin'
+    avatar TEXT,
+    password_hash VARCHAR(255) NOT NULL, -- Untuk auth manual di Express
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 2. TICKETS TABLE
+CREATE TABLE IF NOT EXISTS tickets (
+    id VARCHAR(255) PRIMARY KEY,
+    ticket_no VARCHAR(50) UNIQUE NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    category VARCHAR(100),
+    priority VARCHAR(50) NOT NULL DEFAULT 'medium', -- 'critical', 'high', 'medium', 'low'
+    status VARCHAR(50) NOT NULL DEFAULT 'open', -- 'open', 'in_progress', 'resolved', 'closed'
+    user_id VARCHAR(255) NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+    assigned_to VARCHAR(255) REFERENCES profiles(id) ON DELETE SET NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 3. TICKET COMMENTS TABLE
+CREATE TABLE IF NOT EXISTS ticket_comments (
+    id VARCHAR(255) PRIMARY KEY,
+    ticket_id VARCHAR(255) NOT NULL REFERENCES tickets(id) ON DELETE CASCADE,
+    user_id VARCHAR(255) NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+    content TEXT NOT NULL,
+    is_internal BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 4. TICKET ATTACHMENTS TABLE
+CREATE TABLE IF NOT EXISTS ticket_attachments (
+    id VARCHAR(255) PRIMARY KEY,
+    ticket_id VARCHAR(255) NOT NULL REFERENCES tickets(id) ON DELETE CASCADE,
+    file_url TEXT NOT NULL,
+    file_name VARCHAR(255) NOT NULL,
+    file_type VARCHAR(100),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 5. TICKET HISTORY TABLE
+CREATE TABLE IF NOT EXISTS ticket_history (
+    id VARCHAR(255) PRIMARY KEY,
+    ticket_id VARCHAR(255) NOT NULL REFERENCES tickets(id) ON DELETE CASCADE,
+    old_status VARCHAR(50),
+    new_status VARCHAR(50) NOT NULL,
+    note TEXT,
+    changed_by VARCHAR(255) REFERENCES profiles(id) ON DELETE SET NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 6. NOTIFICATIONS TABLE
+CREATE TABLE IF NOT EXISTS notifications (
+    id VARCHAR(255) PRIMARY KEY,
+    user_id VARCHAR(255) NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+    title VARCHAR(255) NOT NULL,
+    message TEXT NOT NULL,
+    is_read BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);

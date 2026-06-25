@@ -1,85 +1,52 @@
 import 'dart:io';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:dio/dio.dart';
 import '../models/ticket_model.dart';
+import '../../core/services/api_client.dart';
 import '../../core/services/supabase_service.dart';
 
 class SupabaseTicketRepository {
-  final _client = SupabaseService.client;
-
   String get _userId => SupabaseService.currentUserId ?? '';
 
-  Future<String> get _userRole async {
-    final profile = await _client
-        .from('profiles')
-        .select('role')
-        .eq('id', _userId)
-        .single();
-    return profile['role'] as String? ?? 'user';
-  }
-
-  /// Ambil semua tiket (filtered by role)
+  /// Ambil semua tiket (filtered by role di server)
   Future<List<TicketModel>> getTickets({
     String? status,
     String? priority,
     String? search,
   }) async {
-    final role = await _userRole;
+    try {
+      final response = await ApiClient.dio.get('/tickets', queryParameters: {
+        if (status != null && status != 'all') 'status': status,
+        if (priority != null) 'priority': priority,
+        if (search != null && search.isNotEmpty) 'search': search,
+      });
 
-    var query = _client.from('tickets').select('''
-      *,
-      user:profiles!tickets_user_id_fkey(id, name, email, role),
-      assignee:profiles!tickets_assigned_to_fkey(id, name, email, role),
-      ticket_comments(
-        id, content, user_id, created_at, is_internal,
-        user:profiles(id, name, role)
-      ),
-      ticket_attachments(id, file_url, file_name, file_type, created_at),
-      ticket_history(
-        id, old_status, new_status, note, changed_by, created_at,
-        user:profiles!ticket_history_changed_by_fkey(id, name)
-      )
-    ''');
-
-    // Role-based filter sudah ditangani RLS, tapi untuk keamanan double:
-    if (role == 'user') {
-      query = query.eq('user_id', _userId);
+      if (response.data['success'] == true) {
+        final ticketsList = response.data['data']['tickets'] as List? ?? [];
+        return ticketsList.map((e) => TicketModel.fromJson(e as Map<String, dynamic>)).toList();
+      } else {
+        throw Exception(response.data['message'] ?? 'Gagal mengambil tiket');
+      }
+    } catch (e) {
+      print('❌ getTickets error: $e');
+      throw Exception('Gagal mengambil daftar tiket dari server.');
     }
-
-    // Filter opsional
-    if (status != null && status != 'all') {
-      query = query.eq('status', status);
-    }
-    if (priority != null) {
-      query = query.eq('priority', priority);
-    }
-    if (search != null && search.isNotEmpty) {
-      query = query.or(
-        'title.ilike.%$search%,description.ilike.%$search%,ticket_no.ilike.%$search%',
-      );
-    }
-
-    final data = await query.order('created_at', ascending: false);
-    return data.map((e) => _mapToTicketModel(e)).toList();
   }
 
   /// Ambil 1 tiket berdasarkan ID
   Future<TicketModel> getTicketById(String id) async {
-    final data = await _client.from('tickets').select('''
-      *,
-      user:profiles!tickets_user_id_fkey(id, name, email, role),
-      assignee:profiles!tickets_assigned_to_fkey(id, name, email, role),
-      ticket_comments(
-        id, content, user_id, created_at, is_internal,
-        user:profiles(id, name, role)
-      ),
-      ticket_attachments(id, file_url, file_name, file_type, created_at),
-      ticket_history(
-        id, old_status, new_status, note, changed_by, created_at,
-        user:profiles!ticket_history_changed_by_fkey(id, name)
-      )
-    ''').eq('id', id).single();
+    try {
+      final response = await ApiClient.dio.get('/tickets/$id');
 
-    return _mapToTicketModel(data);
+      if (response.data['success'] == true) {
+        final ticketData = response.data['data'] as Map<String, dynamic>;
+        return TicketModel.fromJson(ticketData);
+      } else {
+        throw Exception(response.data['message'] ?? 'Ticket tidak ditemukan');
+      }
+    } catch (e) {
+      print('❌ getTicketById error: $e');
+      throw Exception('Gagal mengambil detail tiket dari server.');
+    }
   }
 
   /// Buat tiket baru
@@ -89,45 +56,57 @@ class SupabaseTicketRepository {
     String? category,
     String priority = 'medium',
   }) async {
-    final data = await _client
-        .from('tickets')
-        .insert({
-          'title': title,
-          'description': description,
-          'category': category,
-          'priority': priority,
-          'status': 'open',
-          'user_id': _userId,
-          'ticket_no': 'TEMP', // akan di-override oleh trigger
-        })
-        .select()
-        .single();
+    try {
+      final response = await ApiClient.dio.post('/tickets', data: {
+        'title': title,
+        'description': description,
+        'category': category ?? 'General',
+        'priority': priority,
+      });
 
-    return _mapToTicketModel(data);
+      if (response.data['success'] == true) {
+        final ticketData = response.data['data'] as Map<String, dynamic>;
+        return TicketModel.fromJson(ticketData);
+      } else {
+        throw Exception(response.data['message'] ?? 'Gagal membuat tiket');
+      }
+    } catch (e) {
+      print('❌ createTicket error: $e');
+      throw Exception('Gagal membuat tiket baru.');
+    }
   }
 
   /// Update status tiket
   Future<void> updateStatus(String ticketId, String status, String note) async {
-    await _client.from('tickets').update({
-      'status': status,
-    }).eq('id', ticketId);
-
-    // Tambah note ke history manual jika ada
-    if (note.isNotEmpty) {
-      await _client.from('ticket_history').insert({
-        'ticket_id': ticketId,
-        'changed_by': _userId,
-        'new_status': status,
+    try {
+      final response = await ApiClient.dio.put('/tickets/$ticketId', data: {
+        'status': status,
         'note': note,
       });
+
+      if (response.data['success'] != true) {
+        throw Exception(response.data['message'] ?? 'Gagal mengubah status');
+      }
+    } catch (e) {
+      print('❌ updateStatus error: $e');
+      throw Exception('Gagal mengubah status tiket.');
     }
   }
 
   /// Assign tiket ke helpdesk
   Future<void> assignTicket(String ticketId, String? helpdeskId) async {
-    await _client.from('tickets').update({
-      'assigned_to': helpdeskId,
-    }).eq('id', ticketId);
+    try {
+      final response = await ApiClient.dio.put('/tickets/$ticketId', data: {
+        'assigned_to': helpdeskId,
+      });
+
+      if (response.data['success'] != true) {
+        throw Exception(response.data['message'] ?? 'Gagal menugaskan tiket');
+      }
+    } catch (e) {
+      print('❌ assignTicket error: $e');
+      throw Exception('Gagal menugaskan tiket.');
+    }
   }
 
   /// Tambah komentar
@@ -136,163 +115,163 @@ class SupabaseTicketRepository {
     String content, {
     bool isInternal = false,
   }) async {
-    await _client.from('ticket_comments').insert({
-      'ticket_id': ticketId,
-      'user_id': _userId,
-      'content': content,
-      'is_internal': isInternal,
-    });
+    try {
+      final response = await ApiClient.dio.post('/tickets/$ticketId/comments', data: {
+        'content': content,
+        'is_internal': isInternal,
+      });
+
+      if (response.data['success'] != true) {
+        throw Exception(response.data['message'] ?? 'Gagal menambah komentar');
+      }
+    } catch (e) {
+      print('❌ addComment error: $e');
+      throw Exception('Gagal mengirim komentar.');
+    }
   }
 
-  /// Upload lampiran ke Supabase Storage
+  /// Upload lampiran ke Express.js Server
   Future<Map<String, String>> uploadAttachment(
     String ticketId,
     File file,
     String fileName,
   ) async {
-    final path = '$_userId/$ticketId/$fileName';
-    final ext = fileName.split('.').last.toLowerCase();
-    final mimeType = _getMimeType(ext);
+    try {
+      final ext = fileName.split('.').last.toLowerCase();
+      final mimeType = _getMimeType(ext);
 
-    await _client.storage.from('ticket-attachments').upload(
-          path,
-          file,
-          fileOptions: FileOptions(contentType: mimeType, upsert: true),
-        );
+      final formData = FormData.fromMap({
+        'file': await MultipartFile.fromFile(
+          file.path,
+          filename: fileName,
+          contentType: DioMediaType.parse(mimeType),
+        ),
+      });
 
-    final url = _client.storage.from('ticket-attachments').getPublicUrl(path);
+      final response = await ApiClient.dio.post(
+        '/tickets/$ticketId/attachments',
+        data: formData,
+      );
 
-    // Simpan metadata ke tabel
-    await _client.from('ticket_attachments').insert({
-      'ticket_id': ticketId,
-      'user_id': _userId,
-      'file_name': fileName,
-      'file_url': url,
-      'file_type': mimeType,
-      'file_size': await file.length(),
-    });
-
-    return {'url': url, 'path': path};
+      if (response.data['success'] == true) {
+        final resData = response.data['data'] as Map<String, dynamic>;
+        final url = resData['url']?.toString() ?? '';
+        final path = resData['path']?.toString() ?? '';
+        return {'url': url, 'path': path};
+      } else {
+        throw Exception(response.data['message'] ?? 'Upload gagal');
+      }
+    } catch (e) {
+      print('❌ uploadAttachment error: $e');
+      throw Exception('Gagal mengunggah lampiran.');
+    }
   }
 
   /// Dashboard stats
   Future<Map<String, int>> getDashboardStats() async {
-    final role = await _userRole;
+    try {
+      final tickets = await getTickets(status: 'all');
+      final stats = <String, int>{
+        'total': tickets.length,
+        'open': 0,
+        'in_progress': 0,
+        'resolved': 0,
+        'closed': 0,
+      };
 
-    var query = _client.from('tickets').select('status');
-    if (role == 'user') query = query.eq('user_id', _userId);
-
-    final data = await query;
-    final stats = <String, int>{
-      'total': data.length,
-      'open': 0,
-      'in_progress': 0,
-      'resolved': 0,
-      'closed': 0,
-    };
-    for (final t in data) {
-      final s = t['status'] as String;
-      stats[s] = (stats[s] ?? 0) + 1;
+      for (final t in tickets) {
+        final s = t.status.toLowerCase();
+        if (stats.containsKey(s)) {
+          stats[s] = (stats[s] ?? 0) + 1;
+        }
+      }
+      return stats;
+    } catch (e) {
+      print('❌ getDashboardStats error: $e');
+      return {
+        'total': 0,
+        'open': 0,
+        'in_progress': 0,
+        'resolved': 0,
+        'closed': 0,
+      };
     }
-    return stats;
   }
 
   /// Ambil notifikasi user
   Future<List<Map<String, dynamic>>> getNotifications() async {
-    final data = await _client
-        .from('notifications')
-        .select()
-        .eq('user_id', _userId)
-        .order('created_at', ascending: false)
-        .limit(50);
-    return List<Map<String, dynamic>>.from(data);
+    try {
+      final response = await ApiClient.dio.get('/notifications');
+      final list = response.data as List? ?? [];
+      return List<Map<String, dynamic>>.from(list);
+    } catch (e) {
+      print('❌ getNotifications error: $e');
+      return [];
+    }
   }
 
   /// Tandai notifikasi sudah dibaca
   Future<void> markNotifRead(String id) async {
-    await _client.from('notifications').update({'is_read': true}).eq('id', id);
+    try {
+      await ApiClient.dio.put('/notifications/$id/read');
+    } catch (e) {
+      print('❌ markNotifRead error: $e');
+    }
   }
 
   /// Ambil daftar helpdesk (untuk assign)
   Future<List<Map<String, dynamic>>> getHelpdeskList() async {
-    final data = await _client
-        .from('profiles')
-        .select('id, name, email')
-        .inFilter('role', ['admin', 'helpdesk']);
-    return List<Map<String, dynamic>>.from(data);
+    try {
+      final response = await ApiClient.dio.get('/auth/helpdesk');
+      if (response.data['success'] == true) {
+        final list = response.data['data'] as List? ?? [];
+        return List<Map<String, dynamic>>.from(list);
+      }
+      return [];
+    } catch (e) {
+      print('❌ getHelpdeskList error: $e');
+      return [];
+    }
   }
 
   /// Ambil history tiket
   Future<List<Map<String, dynamic>>> getTicketHistory(String ticketId) async {
-    final data = await _client
-        .from('ticket_history')
-        .select('*, user:profiles!ticket_history_changed_by_fkey(id, name)')
-        .eq('ticket_id', ticketId)
-        .order('created_at', ascending: false);
-    return List<Map<String, dynamic>>.from(data);
+    try {
+      final ticket = await getTicketById(ticketId);
+      return ticket.history.map((h) => {
+        'id': h.id,
+        'ticket_id': h.ticketId,
+        'changed_by': h.changedBy,
+        'old_status': h.oldStatus,
+        'new_status': h.newStatus,
+        'note': h.note,
+        'created_at': h.createdAt.toIso8601String(),
+        'user': h.user != null ? {
+          'id': h.user!.id,
+          'name': h.user!.name,
+        } : null,
+      }).toList();
+    } catch (e) {
+      print('❌ getTicketHistory error: $e');
+      return [];
+    }
   }
 
-  // ── Realtime Subscription ──────────────────────────────────────────────────
+  // ── Realtime Subscription Mocked (Bypassed) ──────────────────────────────────
 
-  /// Listen perubahan tiket secara realtime
-  RealtimeChannel subscribeToTickets(Function(dynamic) onUpdate) {
-    return _client
-        .channel('tickets_changes')
-        .onPostgresChanges(
-          event: PostgresChangeEvent.all,
-          schema: 'public',
-          table: 'tickets',
-          callback: (payload) => onUpdate(payload),
-        )
-        .subscribe();
+  /// Listen perubahan tiket secara realtime (Mocked - updates handled via manual pulls)
+  dynamic subscribeToTickets(Function(dynamic) onUpdate) {
+    print('📡 subscribeToTickets called (Mocked/REST API Mode)');
+    return null;
   }
 
-  /// Listen notifikasi user secara realtime
-  RealtimeChannel subscribeToNotifications(Function(dynamic) onNotif) {
-    return _client
-        .channel('notifications_$_userId')
-        .onPostgresChanges(
-          event: PostgresChangeEvent.insert,
-          schema: 'public',
-          table: 'notifications',
-          filter: PostgresChangeFilter(
-            type: PostgresChangeFilterType.eq,
-            column: 'user_id',
-            value: _userId,
-          ),
-          callback: (payload) => onNotif(payload),
-        )
-        .subscribe();
+  /// Listen notifikasi user secara realtime (Mocked)
+  dynamic subscribeToNotifications(Function(dynamic) onNotif) {
+    print('📡 subscribeToNotifications called (Mocked/REST API Mode)');
+    return null;
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
-
-  TicketModel _mapToTicketModel(Map<String, dynamic> data) {
-    final comments = (data['ticket_comments'] as List? ?? []).map((c) {
-      final map = Map<String, dynamic>.from(c);
-      map['ticket_id'] = data['id'];
-      return map;
-    }).toList();
-
-    final attachments = (data['ticket_attachments'] as List? ?? []).map((a) {
-      final map = Map<String, dynamic>.from(a);
-      map['ticket_id'] = data['id'];
-      return map;
-    }).toList();
-
-    final history = (data['ticket_history'] as List? ?? []).map((h) {
-      final map = Map<String, dynamic>.from(h);
-      map['ticket_id'] = data['id'];
-      return map;
-    }).toList();
-
-    return TicketModel.fromJson({
-      ...data,
-      'comments': comments,
-      'attachments': attachments,
-      'history': history,
-    });
-  }
 
   String _getMimeType(String ext) {
     const map = {

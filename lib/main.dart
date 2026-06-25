@@ -5,6 +5,7 @@ import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/services/theme_service.dart';
 import 'core/services/supabase_service.dart'; 
+import 'core/services/api_client.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,8 +15,11 @@ void main() async {
     statusBarIconBrightness: Brightness.dark,
   ));
 
-  // Initialize Supabase
+  // Initialize Supabase (loads .env and local cached session)
   await SupabaseService.initialize();
+
+  // Initialize ApiClient for REST API communication
+  await ApiClient.initialize();
 
   // Initialize theme service
   await ThemeService().init();
