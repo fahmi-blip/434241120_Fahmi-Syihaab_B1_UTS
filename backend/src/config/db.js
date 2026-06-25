@@ -38,7 +38,7 @@ const initDb = async () => {
     const userCount = parseInt(checkUsers.rows[0].count);
 
     if (userCount === 0) {
-      console.log('🔄 Seeding default users (admin, support, user)...');
+      console.log('🔄 Seeding default users (admin, helpdesk, user)...');
       
       const defaultPassword = 'password123';
       const hashedPassword = bcrypt.hashSync(defaultPassword, 10);
@@ -55,11 +55,11 @@ const initDb = async () => {
         },
         {
           id: '660e8400-e29b-41d4-a716-446655440001',
-          name: 'Sarah Support',
+          name: 'Sarah Helpdesk',
           email: 'support@example.com',
           phone: '+6289876543210',
           department: 'Customer Service',
-          role: 'support',
+          role: 'helpdesk',
           avatar: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Sarah',
         },
         {
@@ -83,6 +83,9 @@ const initDb = async () => {
       }
       console.log('✅ Seeding complete!');
     }
+
+    // Auto-migrate role 'support' to 'helpdesk' for existing users (compatibility check)
+    await pool.query("UPDATE profiles SET role = 'helpdesk' WHERE role = 'support'");
   } catch (error) {
     console.error('❌ Database initialization error:', error.message);
     throw error;
