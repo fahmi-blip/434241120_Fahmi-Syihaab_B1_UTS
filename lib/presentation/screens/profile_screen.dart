@@ -273,92 +273,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Tampilan
-                  _SectionLabel('TAMPILAN', isDark),
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 14),
-                    decoration: BoxDecoration(
-                      color: isDark ? AppTheme.dark1 : AppTheme.surface0,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                          color: isDark ? AppTheme.dark3 : AppTheme.surface2,
-                          width: 0.5),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 32,
-                          height: 32,
-                          decoration: BoxDecoration(
-                            color: isDark ? AppTheme.dark2 : AppTheme.surface1,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Icon(Icons.dark_mode_outlined,
-                              size: 16,
-                              color: isDark
-                                  ? AppTheme.textSecondaryDark
-                                  : AppTheme.textSecondary),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text('Mode Gelap',
-                              style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  color: isDark
-                                      ? AppTheme.white
-                                      : AppTheme.black)),
-                        ),
-                        AnimatedBuilder(
-                          animation: _theme,
-                          builder: (_, __) {
-                            final on = _theme.themeMode == ThemeMode.dark;
-                            return GestureDetector(
-                              onTap: () => _theme.toggleTheme(),
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 180),
-                                width: 44,
-                                height: 24,
-                                decoration: BoxDecoration(
-                                  color: on
-                                      ? (isDark
-                                          ? AppTheme.white
-                                          : AppTheme.accent)
-                                      : (isDark
-                                          ? AppTheme.dark3
-                                          : AppTheme.surface3),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: AnimatedAlign(
-                                  duration: const Duration(milliseconds: 180),
-                                  alignment: on
-                                      ? Alignment.centerRight
-                                      : Alignment.centerLeft,
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(2),
-                                    child: Container(
-                                      width: 20,
-                                      height: 20,
-                                      decoration: BoxDecoration(
-                                        color: on
-                                            ? (isDark
-                                                ? AppTheme.black
-                                                : AppTheme.white)
-                                            : AppTheme.white,
-                                        shape: BoxShape.circle,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 20),
+                  
 
                   // Akun
                   _SectionLabel('AKUN', isDark),
@@ -377,9 +292,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   const SizedBox(height: 8),
                   _MenuCard(isDark: isDark, items: [
                     _MenuItem(
+                        icon: Icons.settings_outlined,
+                        label: 'Pengaturan',
+                        isDark: isDark,
+                        onTap: () => context.push('/settings')),
+                    _MenuItem(
                         icon: Icons.new_releases_outlined,
                         label: 'Versi',
-                        value: '1.0.0',
+                        value: '2.0.0',
                         isDark: isDark),
                     _MenuItem(
                         icon: Icons.help_outline_rounded,

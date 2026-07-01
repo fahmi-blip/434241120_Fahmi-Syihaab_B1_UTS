@@ -34,6 +34,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         );
     if (mounted) {
       if (ok) {
+        await Future.delayed(const Duration(milliseconds: 100));
         context.go('/dashboard');
       } else {
         ScaffoldMessenger.of(context).showSnackBar(

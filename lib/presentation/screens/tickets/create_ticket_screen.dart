@@ -113,7 +113,13 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
         leading: IconButton(
           icon: Icon(Icons.arrow_back_ios_rounded,
               size: 18, color: isDark ? AppTheme.white : AppTheme.black),
-          onPressed: () => context.pop(),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/dashboard');
+            }
+          }
         ),
         title: Text('Buat Tiket',
             style: TextStyle(

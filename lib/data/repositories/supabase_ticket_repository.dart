@@ -2,10 +2,8 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import '../models/ticket_model.dart';
 import '../../core/services/api_client.dart';
-import '../../core/services/supabase_service.dart';
 
 class SupabaseTicketRepository {
-  String get _userId => SupabaseService.currentUserId ?? '';
 
   /// Ambil semua tiket (filtered by role di server)
   Future<List<TicketModel>> getTickets({

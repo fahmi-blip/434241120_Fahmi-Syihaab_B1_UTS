@@ -54,5 +54,5 @@ class UserModel {
 
   String get displayName => name;
   bool get isAdmin => role == 'admin';
-  bool get isSupport => role == 'support' || role == 'admin';
+  bool get isSupport => role == 'helpdesk' || role == 'admin';
 }
