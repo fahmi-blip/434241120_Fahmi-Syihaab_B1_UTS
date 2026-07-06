@@ -8,6 +8,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../data/models/ticket_model.dart';
 import '../../../data/providers/providers.dart';
 import '../../../data/repositories/supabase_ticket_repository.dart';
+import '../../../core/services/api_client.dart';
 
 class TicketDetailScreen extends ConsumerStatefulWidget {
   final String ticketId;
@@ -51,7 +52,7 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
       // Debug: print role
       print('📋 Ticket loaded: ${t.title}');
       print('👤 User role: $role');
-      print('🔧 Is admin/helpdesk: ${role == 'admin' || role == 'helpdesk'}');
+      print('🔧 Is admin/helpdesk: ${role == 'admin' || role == 'helpdesk' || role == 'support'}');
 
       if (mounted) {
         setState(() {
@@ -64,8 +65,8 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
       if (mounted) setState(() => _loading = false);
     }
 
-    // Load helpdesk list jika admin/helpdesk
-    if (_isAdmin) {
+    // Load helpdesk list jika admin
+    if (_userRole == 'admin') {
       _loadHelpdeskList();
     }
   }
@@ -85,7 +86,12 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
     }
   }
 
-  bool get _isAdmin => _userRole == 'admin' || _userRole == 'helpdesk';
+  bool get _isAdmin =>
+      _userRole == 'admin' ||
+      _userRole == 'helpdesk' ||
+      _userRole == 'support';
+  bool get _isAdminRole => _userRole == 'admin';
+  bool get _isClosed => _ticket?.status == 'closed';
 
   Future<void> _addComment() async {
     if (_commentCtrl.text.trim().isEmpty) return;
@@ -190,10 +196,98 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
       ),
     );
     if (ok == true) {
-      await _repo.updateStatus(widget.ticketId, status, noteCtrl.text.trim());
-      await _load();
+      setState(() => _submitting = true);
+      try {
+        await _repo.updateStatus(widget.ticketId, status, noteCtrl.text.trim());
+        await _load();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+                content: Text('Status tiket berhasil diperbarui'),
+                backgroundColor: AppTheme.statusResolved),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text('Gagal memperbarui status: $e'),
+                backgroundColor: AppTheme.priorityHigh),
+          );
+        }
+      } finally {
+        if (mounted) setState(() => _submitting = false);
+      }
     }
     noteCtrl.dispose();
+  }
+
+  Widget _buildStatusUpdateSection(TicketModel t, bool isDark) {
+    if (t.status == 'closed') return const SizedBox.shrink();
+
+    List<String> options = [];
+    if (_userRole == 'admin') {
+      if (t.status == 'resolved') {
+        options = ['closed'];
+      }
+    } else if (_userRole == 'helpdesk' || _userRole == 'support') {
+      if (t.status == 'in_progress') {
+        options = ['resolved', 'closed'];
+      } else if (t.status == 'resolved') {
+        options = ['closed'];
+      }
+    }
+
+    if (options.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 16),
+        Text('Update Status',
+            style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: isDark
+                    ? AppTheme.textSecondaryDark
+                    : AppTheme.textSecondary)),
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: options.map((s) {
+            final isCurrent = t.status == s;
+            return GestureDetector(
+              onTap: isCurrent ? null : () => _updateStatus(s),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                decoration: BoxDecoration(
+                  color: isCurrent
+                      ? AppTheme.statusColor(s)
+                      : AppTheme.statusBgColor(s, isDark: isDark),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: AppTheme.statusColor(s),
+                    width: 0.5,
+                  ),
+                ),
+                child: Text(
+                  AppTheme.statusLabel(s),
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: isCurrent
+                        ? AppTheme.white
+                        : AppTheme.statusColor(s),
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
+    );
   }
 
   @override
@@ -351,167 +445,127 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
           ),
 
           // ── Admin Actions ─────────────────────────────────────────────
-          if (_isAdmin) ...[
-            const SizedBox(height: 16),
-            // Assign Section
-            Text('Assign Tiket',
-                style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: isDark
-                        ? AppTheme.textSecondaryDark
-                        : AppTheme.textSecondary)),
-            const SizedBox(height: 10),
-            _Card(
-              isDark: isDark,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Show current assignee
-                  Row(
-                    children: [
-                      Icon(Icons.person_outline_rounded,
-                          size: 16,
-                          color: isDark
-                              ? AppTheme.textSecondaryDark
-                              : AppTheme.textSecondary),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Assigned to: ',
-                        style: TextStyle(
-                            fontSize: 13,
+          if (_isAdmin && !_isClosed) ...[
+            if (_isAdminRole) ...[
+              const SizedBox(height: 16),
+              // Assign Section
+              Text('Assign Tiket',
+                  style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: isDark
+                          ? AppTheme.textSecondaryDark
+                          : AppTheme.textSecondary)),
+              const SizedBox(height: 10),
+              _Card(
+                isDark: isDark,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Show current assignee
+                    Row(
+                      children: [
+                        Icon(Icons.person_outline_rounded,
+                            size: 16,
                             color: isDark
                                 ? AppTheme.textSecondaryDark
                                 : AppTheme.textSecondary),
-                      ),
-                      Expanded(
-                        child: Text(
-                          t.assignee?.name ?? 'Belum di-assign',
+                        const SizedBox(width: 8),
+                        Text(
+                          'Assigned to: ',
                           style: TextStyle(
                               fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: isDark ? AppTheme.white : AppTheme.black),
+                              color: isDark
+                                  ? AppTheme.textSecondaryDark
+                                  : AppTheme.textSecondary),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  // Dropdown to assign
-                  if (_loadingHelpdesk)
-                    SizedBox(
-                      height: 40,
-                      child: Center(
-                          child: SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: isDark
-                                      ? AppTheme.white
-                                      : AppTheme.black))),
-                    )
-                  else
-                    DropdownButtonFormField<String>(
-                      decoration: InputDecoration(
-                        hintText: 'Pilih Helpdesk',
-                        filled: true,
-                        fillColor: isDark ? AppTheme.dark2 : AppTheme.surface1,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: BorderSide(
-                              color:
-                                  isDark ? AppTheme.dark3 : AppTheme.surface2,
-                              width: 0.5),
+                        Expanded(
+                          child: Text(
+                            t.assignee?.name ?? 'Belum di-assign',
+                            style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: isDark ? AppTheme.white : AppTheme.black),
+                          ),
                         ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: BorderSide(
-                              color:
-                                  isDark ? AppTheme.dark3 : AppTheme.surface2,
-                              width: 0.5),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: BorderSide(
-                              color: isDark ? AppTheme.white : AppTheme.black,
-                              width: 1),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 8),
-                      ),
-                      dropdownColor:
-                          isDark ? AppTheme.dark1 : AppTheme.surface0,
-                      icon: Icon(Icons.keyboard_arrow_down_rounded,
-                          color: isDark
-                              ? AppTheme.textSecondaryDark
-                              : AppTheme.textSecondary),
-                      style: TextStyle(
-                          fontSize: 13,
-                          color: isDark ? AppTheme.white : AppTheme.black),
-                      items: [
-                        const DropdownMenuItem(
-                            value: null,
-                            child: Text('Unassign',
-                                style: TextStyle(
-                                    fontStyle: FontStyle.italic,
-                                    fontSize: 13))),
-                        ..._helpdeskList.map((h) {
-                          return DropdownMenuItem(
-                            value: h['id'] as String,
-                            child: Text(h['name'] as String,
-                                style: const TextStyle(fontSize: 13)),
-                          );
-                        }),
                       ],
-                      initialValue: t.assignedTo,
-                      onChanged: _submitting ? null : (v) => _assignTicket(v),
                     ),
-                ],
+                    const SizedBox(height: 12),
+                    // Dropdown to assign
+                    if (_loadingHelpdesk)
+                      SizedBox(
+                        height: 40,
+                        child: Center(
+                            child: SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: isDark
+                                        ? AppTheme.white
+                                        : AppTheme.black))),
+                      )
+                    else
+                      DropdownButtonFormField<String>(
+                        decoration: InputDecoration(
+                          hintText: 'Pilih Helpdesk',
+                          filled: true,
+                          fillColor: isDark ? AppTheme.dark2 : AppTheme.surface1,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide(
+                                color:
+                                    isDark ? AppTheme.dark3 : AppTheme.surface2,
+                                width: 0.5),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide(
+                                color:
+                                    isDark ? AppTheme.dark3 : AppTheme.surface2,
+                                width: 0.5),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide(
+                                color: isDark ? AppTheme.white : AppTheme.black,
+                                width: 1),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 8),
+                        ),
+                        dropdownColor:
+                            isDark ? AppTheme.dark1 : AppTheme.surface0,
+                        icon: Icon(Icons.keyboard_arrow_down_rounded,
+                            color: isDark
+                                ? AppTheme.textSecondaryDark
+                                : AppTheme.textSecondary),
+                        style: TextStyle(
+                            fontSize: 13,
+                            color: isDark ? AppTheme.white : AppTheme.black),
+                        items: [
+                          const DropdownMenuItem(
+                              value: null,
+                              child: Text('Unassign',
+                                  style: TextStyle(
+                                      fontStyle: FontStyle.italic,
+                                      fontSize: 13))),
+                          ..._helpdeskList.map((h) {
+                            return DropdownMenuItem(
+                              value: h['id'] as String,
+                              child: Text(h['name'] as String,
+                                  style: const TextStyle(fontSize: 13)),
+                            );
+                          }),
+                        ],
+                        initialValue: t.assignedTo,
+                        onChanged: _submitting ? null : (v) => _assignTicket(v),
+                      ),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            Text('Update Status',
-                style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: isDark
-                        ? AppTheme.textSecondaryDark
-                        : AppTheme.textSecondary)),
-            const SizedBox(height: 10),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: ['open', 'in_progress', 'resolved', 'closed'].map((s) {
-                final isCurrent = t.status == s;
-                return GestureDetector(
-                  onTap: isCurrent ? null : () => _updateStatus(s),
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: isCurrent
-                          ? AppTheme.statusColor(s)
-                          : AppTheme.statusBgColor(s, isDark: isDark),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: AppTheme.statusColor(s),
-                        width: 0.5,
-                      ),
-                    ),
-                    child: Text(
-                      AppTheme.statusLabel(s),
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: isCurrent
-                            ? AppTheme.white
-                            : AppTheme.statusColor(s),
-                      ),
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
+            ],
+            _buildStatusUpdateSection(t, isDark),
           ],
 
           // ── Attachments ───────────────────────────────────────────────
@@ -583,60 +637,62 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
           const SizedBox(height: 10),
 
           // Comment Input
-          _Card(
-            isDark: isDark,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _commentCtrl,
-                    maxLines: 4,
-                    minLines: 1,
-                    style: TextStyle(
-                        fontSize: 14,
-                        color: isDark ? AppTheme.white : AppTheme.black,
-                        height: 1.5),
-                    decoration: InputDecoration(
-                      hintText: 'Tulis komentar...',
-                      hintStyle: TextStyle(
+          if (t.status != 'closed') ...[
+            _Card(
+              isDark: isDark,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _commentCtrl,
+                      maxLines: 4,
+                      minLines: 1,
+                      style: TextStyle(
                           fontSize: 14,
-                          color: isDark
-                              ? AppTheme.textTertiaryDark
-                              : AppTheme.textTertiary),
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(vertical: 8),
-                      isDense: true,
+                          color: isDark ? AppTheme.white : AppTheme.black,
+                          height: 1.5),
+                      decoration: InputDecoration(
+                        hintText: 'Tulis komentar...',
+                        hintStyle: TextStyle(
+                            fontSize: 14,
+                            color: isDark
+                                ? AppTheme.textTertiaryDark
+                                : AppTheme.textTertiary),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                        isDense: true,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                GestureDetector(
-                  onTap: _submitting ? null : _addComment,
-                  child: Container(
-                    width: 38,
-                    height: 38,
-                    decoration: BoxDecoration(
-                      color: isDark ? AppTheme.white : AppTheme.accent,
-                      borderRadius: BorderRadius.circular(10),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: _submitting ? null : _addComment,
+                    child: Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        color: isDark ? AppTheme.white : AppTheme.accent,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: _submitting
+                          ? Padding(
+                              padding: const EdgeInsets.all(9),
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color:
+                                      isDark ? AppTheme.black : AppTheme.white),
+                            )
+                          : Icon(Icons.send_rounded,
+                              size: 18,
+                              color: isDark ? AppTheme.black : AppTheme.white),
                     ),
-                    child: _submitting
-                        ? Padding(
-                            padding: const EdgeInsets.all(9),
-                            child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color:
-                                    isDark ? AppTheme.black : AppTheme.white),
-                          )
-                        : Icon(Icons.send_rounded,
-                            size: 18,
-                            color: isDark ? AppTheme.black : AppTheme.white),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 10),
+            const SizedBox(height: 10),
+          ],
 
           // Comment List
           if (t.comments.isEmpty)
@@ -820,10 +876,109 @@ class _AttachmentCard extends StatelessWidget {
   }
 
   String get _fileName => attachment.fileName ?? 'Attachment';
-  String get _fileUrl => attachment.fileUrl ?? '';
+  String get _fileUrl {
+    var url = attachment.fileUrl ?? '';
+    if (url.contains('localhost') || url.contains('127.0.0.1')) {
+      final baseUrl = ApiClient.dio.options.baseUrl;
+      try {
+        final baseUri = Uri.parse(baseUrl);
+        final fileUri = Uri.parse(url);
+        final newUri = fileUri.replace(
+          scheme: baseUri.scheme,
+          host: baseUri.host,
+          port: baseUri.port,
+        );
+        return newUri.toString();
+      } catch (_) {}
+    }
+    return url;
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (_isImage && _fileUrl.isNotEmpty) {
+      return GestureDetector(
+        onTap: () async {
+          final uri = Uri.parse(_fileUrl);
+          if (await canLaunchUrl(uri)) {
+            await launchUrl(uri, mode: LaunchMode.externalApplication);
+          }
+        },
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 8),
+          decoration: BoxDecoration(
+            color: isDark ? AppTheme.dark1 : AppTheme.surface0,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+                color: isDark ? AppTheme.dark3 : AppTheme.surface2, width: 0.5),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Header area with filename
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
+                child: Row(
+                  children: [
+                    Icon(Icons.image_outlined,
+                        size: 16,
+                        color: isDark
+                            ? AppTheme.textSecondaryDark
+                            : AppTheme.textSecondary),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _fileName,
+                        style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: isDark ? AppTheme.white : AppTheme.black),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Icon(Icons.open_in_new_rounded,
+                        size: 14,
+                        color: isDark
+                            ? AppTheme.textTertiaryDark
+                            : AppTheme.textTertiary),
+                  ],
+                ),
+              ),
+              // Large image preview
+              ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(13),
+                  bottomRight: Radius.circular(13),
+                ),
+                child: Image.network(
+                  _fileUrl,
+                  height: 180,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(
+                    height: 100,
+                    color: isDark ? AppTheme.dark2 : AppTheme.surface1,
+                    child: Center(
+                      child: Text(
+                        'Gagal memuat gambar',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isDark
+                              ? AppTheme.textTertiaryDark
+                              : AppTheme.textTertiary,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return GestureDetector(
       onTap: () async {
         if (_fileUrl.isNotEmpty) {
@@ -843,20 +998,7 @@ class _AttachmentCard extends StatelessWidget {
         ),
         child: Row(
           children: [
-            // Thumbnail or icon
-            if (_isImage && _fileUrl.isNotEmpty)
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Image.network(
-                  _fileUrl,
-                  width: 48,
-                  height: 48,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => _buildIcon(),
-                ),
-              )
-            else
-              _buildIcon(),
+            _buildIcon(),
             const SizedBox(width: 12),
             // File info
             Expanded(
@@ -873,7 +1015,7 @@ class _AttachmentCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                   Text(
-                    _isImage ? 'Gambar' : 'Dokumen',
+                    'Dokumen',
                     style: TextStyle(
                         fontSize: 11,
                         color: isDark
@@ -902,7 +1044,7 @@ class _AttachmentCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       child: Icon(
-        _isImage ? Icons.image_outlined : Icons.insert_drive_file_outlined,
+        Icons.insert_drive_file_outlined,
         size: 22,
         color: isDark ? AppTheme.textSecondaryDark : AppTheme.textSecondary,
       ),

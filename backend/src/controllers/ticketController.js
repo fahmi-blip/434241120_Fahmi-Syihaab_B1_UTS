@@ -374,6 +374,72 @@ const updateTicket = async (req, res) => {
       });
     }
 
+    // 1. Tiket yang sudah closed tidak bisa dibuka lagi / diubah statusnya
+    if (currentTicket.status === 'closed') {
+      if (status !== undefined && status !== 'closed') {
+        return res.status(400).json({
+          success: false,
+          message: 'Bad Request',
+          error: {
+            message: 'Bad Request',
+            statusCode: 400,
+            details: 'Tiket yang sudah closed tidak dapat diubah statusnya lagi.'
+          }
+        });
+      }
+    }
+
+    // Determine final status
+    let finalStatus = status;
+
+    if (role !== 'user') {
+      // 2. Auto-change to 'in_progress' when assigned
+      if (assigned_to !== undefined && assigned_to !== null && assigned_to !== '') {
+        if (currentTicket.status === 'open' && (status === undefined || status === 'open')) {
+          finalStatus = 'in_progress';
+        }
+      }
+
+      // 3. Validation for role-based status transitions
+      if (finalStatus !== undefined && finalStatus !== currentTicket.status) {
+        if (role === 'admin') {
+          // Admin can only change status to 'closed' when the current status is 'resolved'
+          // Exception: auto-change to 'in_progress' when assigning is allowed
+          const isAutoInProgressOnAssign = (finalStatus === 'in_progress' && currentTicket.status === 'open' && assigned_to !== undefined);
+          if (!isAutoInProgressOnAssign) {
+            if (finalStatus !== 'closed' || currentTicket.status !== 'resolved') {
+              return res.status(400).json({
+                success: false,
+                message: 'Bad Request',
+                error: {
+                  message: 'Bad Request',
+                  statusCode: 400,
+                  details: 'Admin hanya dapat mengubah status tiket menjadi Closed ketika status saat ini adalah Resolved.'
+                }
+              });
+            }
+          }
+        } else if (role === 'helpdesk' || role === 'support') {
+          // Helpdesk can only change status to 'resolved' or 'closed'
+          // Exception: auto-change to 'in_progress' when assigning is allowed
+          const isAutoInProgressOnAssign = (finalStatus === 'in_progress' && currentTicket.status === 'open' && assigned_to !== undefined);
+          if (!isAutoInProgressOnAssign) {
+            if (finalStatus !== 'resolved' && finalStatus !== 'closed') {
+              return res.status(400).json({
+                success: false,
+                message: 'Bad Request',
+                error: {
+                  message: 'Bad Request',
+                  statusCode: 400,
+                  details: 'Helpdesk hanya dapat mengubah status menjadi Resolved atau Closed.'
+                }
+              });
+            }
+          }
+        }
+      }
+    }
+
     // Build update fields
     const updates = [];
     const values = [];
@@ -394,9 +460,9 @@ const updateTicket = async (req, res) => {
         values.push(category);
       }
       // Allowed to close their own ticket
-      if (status !== undefined && status === 'closed' && currentTicket.status !== 'closed') {
+      if (finalStatus !== undefined && finalStatus === 'closed' && currentTicket.status !== 'closed') {
         updates.push(`status = $${paramIndex++}`);
-        values.push(status);
+        values.push(finalStatus);
       }
     } else {
       // Support & Admin can update all fields
@@ -412,9 +478,9 @@ const updateTicket = async (req, res) => {
         updates.push(`category = $${paramIndex++}`);
         values.push(category);
       }
-      if (status !== undefined) {
+      if (finalStatus !== undefined) {
         updates.push(`status = $${paramIndex++}`);
-        values.push(status);
+        values.push(finalStatus);
       }
       if (priority !== undefined) {
         updates.push(`priority = $${paramIndex++}`);
@@ -452,7 +518,7 @@ const updateTicket = async (req, res) => {
     const updatedTicket = updateResult.rows[0];
 
     // Log to history if status has changed
-    if (status !== undefined && currentTicket.status !== status) {
+    if (currentTicket.status !== updatedTicket.status) {
       const historyId = uuidv4();
       await db.query(
         `INSERT INTO ticket_history (id, ticket_id, old_status, new_status, note, changed_by)
@@ -461,8 +527,8 @@ const updateTicket = async (req, res) => {
           historyId,
           id,
           currentTicket.status,
-          status,
-          note || (role === 'user' ? 'Ticket closed by customer' : `Status updated to ${status}`),
+          updatedTicket.status,
+          note || (role === 'user' ? 'Ticket closed by customer' : `Status updated to ${updatedTicket.status}`),
           userId
         ]
       );
@@ -474,7 +540,7 @@ const updateTicket = async (req, res) => {
         'resolved': 'Resolved',
         'closed': 'Closed'
       };
-      const newStatusDisp = statusMap[status] || status;
+      const newStatusDisp = statusMap[updatedTicket.status] || updatedTicket.status;
       await createNotification(
         currentTicket.user_id,
         'Status Tiket Diperbarui',

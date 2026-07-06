@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../data/models/user_model.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/services/theme_service.dart';
 import '../../../data/providers/providers.dart';
 import '../widgets/common/app_navbar.dart';
 
@@ -17,7 +16,6 @@ class ProfileScreen extends ConsumerStatefulWidget {
 }
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
-  final _theme = ThemeService();
   UserModel? _user;
   bool _loading = true;
 
@@ -114,6 +112,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       case 'admin':
         return 'Administrator';
       case 'helpdesk':
+      case 'support':
         return 'Helpdesk Staff';
       default:
         return 'User';

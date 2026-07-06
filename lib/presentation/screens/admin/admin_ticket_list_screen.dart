@@ -31,7 +31,7 @@ class _AdminTicketListScreenState extends ConsumerState<AdminTicketListScreen> {
   void initState() {
     super.initState();
     _repo = ref.read(ticketRepoProvider);
-    _load();
+    Future.microtask(() => _load());
   }
 
   @override
@@ -43,8 +43,10 @@ class _AdminTicketListScreenState extends ConsumerState<AdminTicketListScreen> {
   Future<void> _load() async {
     setState(() => _loading = true);
     try {
-      // Load all tickets (no user filter)
-      final tickets = await _repo.getTickets();
+      // Refresh global ticket state
+      await ref.read(ticketsProvider.notifier).refresh();
+
+      final tickets = ref.read(ticketListProvider);
       final helpdesk = await _repo.getHelpdeskList();
       if (mounted) {
         setState(() {

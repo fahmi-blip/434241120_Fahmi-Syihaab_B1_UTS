@@ -15,22 +15,13 @@ class DashboardScreen extends ConsumerStatefulWidget {
 }
 
 class _DashboardScreenState extends ConsumerState<DashboardScreen> {
-  String? _userRole;
-
   @override
   void initState() {
     super.initState();
-    _loadUserRole();
     // Refresh unread count when dashboard loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(notificationNotifierProvider.notifier).refresh();
     });
-  }
-
-  Future<void> _loadUserRole() async {
-    final prefs = await SharedPreferences.getInstance();
-    final role = prefs.getString('user_role') ?? 'user';
-    if (mounted) setState(() => _userRole = role);
   }
 
   @override
@@ -39,6 +30,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final ticketsState = ref.watch(ticketsProvider);
     final stats = ticketsState.stats;
     final unreadCount = ref.watch(notificationNotifierProvider);
+    final authState = ref.watch(authNotifierProvider);
+    final userRole = authState.user?.role ?? 'user';
 
     // Debug: print unread count
     print('🔔 Dashboard build - unreadCount: $unreadCount');
@@ -168,7 +161,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   child: _ActionButtons(
                     isDark: isDark,
                     canAccessAdmin:
-                        _userRole == 'admin' || _userRole == 'helpdesk',
+                        userRole == 'admin' || userRole == 'helpdesk' || userRole == 'support',
                     onTrackingTap: () => context.go('/tracking'),
                     onAdminTap: () => context.go('/admin/tickets'),
                   ),

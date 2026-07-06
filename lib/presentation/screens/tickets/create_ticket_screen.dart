@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -22,7 +23,7 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
   String _category = 'IT';
   String? _subCategory;
   String _priority = 'medium';
-  final List<File> _files = [];
+  final List<XFile> _files = [];
   bool _loading = false;
 
   late SupabaseTicketRepository _repo;
@@ -50,7 +51,7 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
   Future<void> _pickImage(ImageSource src) async {
     final f = await ImagePicker()
         .pickImage(source: src, imageQuality: 80, maxWidth: 1920);
-    if (f != null) setState(() => _files.add(File(f.path)));
+    if (f != null) setState(() => _files.add(f));
   }
 
   Future<void> _pickFile() async {
@@ -67,10 +68,19 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
         'png'
       ],
       allowMultiple: true,
+      withData: true,
     );
     if (r != null) {
       for (final f in r.files) {
-        if (f.path != null) setState(() => _files.add(File(f.path!)));
+        if (f.bytes != null) {
+          setState(() {
+            _files.add(XFile.fromData(
+              f.bytes!,
+              name: f.name,
+              path: f.path,
+            ));
+          });
+        }
       }
     }
   }
@@ -84,12 +94,13 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
         description: _desc.text.trim(),
         category: _subCategory ?? _category,
         priority: _priority,
+        files: _files,
       );
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Tiket berhasil dibuat')));
-        context.pop();
+        context.go('/dashboard');
       }
     } catch (e) {
       if (mounted) {
@@ -288,7 +299,7 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                         children: List.generate(_files.length, (i) {
                           final f = _files[i];
                           final isImg = ['jpg', 'jpeg', 'png']
-                              .any((e) => f.path.endsWith(e));
+                              .any((e) => f.name.toLowerCase().endsWith(e));
                           return Stack(
                             children: [
                               Container(
@@ -308,7 +319,32 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                                 child: isImg
                                     ? ClipRRect(
                                         borderRadius: BorderRadius.circular(10),
-                                        child: Image.file(f, fit: BoxFit.cover))
+                                        child: kIsWeb
+                                            ? FutureBuilder<Uint8List>(
+                                                future: f.readAsBytes(),
+                                                builder: (context, snapshot) {
+                                                  if (snapshot.hasData) {
+                                                    return Image.memory(
+                                                      snapshot.data!,
+                                                      fit: BoxFit.cover,
+                                                    );
+                                                  }
+                                                  return const Center(
+                                                    child: SizedBox(
+                                                      width: 16,
+                                                      height: 16,
+                                                      child: CircularProgressIndicator(
+                                                        strokeWidth: 1.5,
+                                                      ),
+                                                    ),
+                                                  );
+                                                },
+                                              )
+                                            : Image.file(
+                                                File(f.path),
+                                                fit: BoxFit.cover,
+                                              ),
+                                      )
                                     : Icon(Icons.insert_drive_file_outlined,
                                         size: 28,
                                         color: isDark

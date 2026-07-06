@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../data/providers/providers.dart';
 
-class AppBottomNavBar extends ConsumerStatefulWidget {
+class AppBottomNavBar extends ConsumerWidget {
   final String currentRoute;
   final VoidCallback? onCreateTicket;
 
@@ -16,42 +16,25 @@ class AppBottomNavBar extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<AppBottomNavBar> createState() => _AppBottomNavBarState();
-}
-
-class _AppBottomNavBarState extends ConsumerState<AppBottomNavBar> {
-  String? _userRole;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadUserRole();
-  }
-
-  Future<void> _loadUserRole() async {
-    final prefs = await SharedPreferences.getInstance();
-    final role = prefs.getString('user_role') ?? 'user';
-    if (mounted) setState(() => _userRole = role);
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isDark = context.isDark;
-    final unreadCount = ref.watch(notificationNotifierProvider);
-    final isUser = _userRole == 'user';
+    final authState = ref.watch(authNotifierProvider);
+    final userRole = authState.user?.role ?? 'user';
+    final activeTrackingCount = ref.watch(activeTrackingCountProvider);
+    final isUser = userRole == 'user';
 
     if (isUser) {
       return _UserBottomNav(
-        currentRoute: widget.currentRoute,
+        currentRoute: currentRoute,
         isDark: isDark,
-        onCreateTicket: widget.onCreateTicket,
-        unreadCount: unreadCount,
+        onCreateTicket: onCreateTicket,
+        activeTrackingCount: activeTrackingCount,
       );
     } else {
       return _AdminBottomNav(
-        currentRoute: widget.currentRoute,
+        currentRoute: currentRoute,
         isDark: isDark,
-        unreadCount: unreadCount,
+        activeTrackingCount: activeTrackingCount,
       );
     }
   }
@@ -62,13 +45,13 @@ class _UserBottomNav extends ConsumerWidget {
   final String currentRoute;
   final bool isDark;
   final VoidCallback? onCreateTicket;
-  final int unreadCount;
+  final int activeTrackingCount;
 
   const _UserBottomNav({
     required this.currentRoute,
     required this.isDark,
     required this.onCreateTicket,
-    required this.unreadCount,
+    required this.activeTrackingCount,
   });
 
   @override
@@ -127,7 +110,7 @@ class _UserBottomNav extends ConsumerWidget {
                 active: currentRoute == '/tracking' || currentRoute.startsWith('/admin/tracking'),
                 onTap: () => context.go('/tracking'),
                 isDark: isDark,
-                badgeCount: unreadCount,
+                badgeCount: activeTrackingCount,
               ),
               _NavItem(
                 icon: Icons.person_outline_rounded,
@@ -148,12 +131,12 @@ class _UserBottomNav extends ConsumerWidget {
 class _AdminBottomNav extends ConsumerWidget {
   final String currentRoute;
   final bool isDark;
-  final int unreadCount;
+  final int activeTrackingCount;
 
   const _AdminBottomNav({
     required this.currentRoute,
     required this.isDark,
-    required this.unreadCount,
+    required this.activeTrackingCount,
   });
 
   @override
@@ -197,7 +180,7 @@ class _AdminBottomNav extends ConsumerWidget {
                     currentRoute == '/admin/tracking',
                 onTap: () => context.go('/tracking'),
                 isDark: isDark,
-                badgeCount: unreadCount,
+                badgeCount: activeTrackingCount,
               ),
               _NavItem(
                 icon: Icons.person_outline_rounded,

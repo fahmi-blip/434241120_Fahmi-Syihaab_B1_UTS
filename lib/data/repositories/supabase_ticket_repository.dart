@@ -1,5 +1,7 @@
 import 'dart:io';
 import 'package:dio/dio.dart';
+import 'package:http_parser/http_parser.dart';
+import 'package:image_picker/image_picker.dart';
 import '../models/ticket_model.dart';
 import '../../core/services/api_client.dart';
 
@@ -53,6 +55,7 @@ class SupabaseTicketRepository {
     required String description,
     String? category,
     String priority = 'medium',
+    List<XFile> files = const [],
   }) async {
     try {
       final response = await ApiClient.dio.post('/tickets', data: {
@@ -64,13 +67,22 @@ class SupabaseTicketRepository {
 
       if (response.data['success'] == true) {
         final ticketData = response.data['data'] as Map<String, dynamic>;
-        return TicketModel.fromJson(ticketData);
+        final ticket = TicketModel.fromJson(ticketData);
+
+        // Upload attachments if any
+        for (final file in files) {
+          await uploadAttachment(ticket.id, file);
+        }
+
+        // Return fully updated ticket with attachments
+        final updatedTicket = await getTicketById(ticket.id);
+        return updatedTicket;
       } else {
         throw Exception(response.data['message'] ?? 'Gagal membuat tiket');
       }
     } catch (e) {
       print('❌ createTicket error: $e');
-      throw Exception('Gagal membuat tiket baru.');
+      throw Exception('Gagal membuat tiket baru: $e');
     }
   }
 
@@ -131,24 +143,29 @@ class SupabaseTicketRepository {
   /// Upload lampiran ke Express.js Server
   Future<Map<String, String>> uploadAttachment(
     String ticketId,
-    File file,
-    String fileName,
+    XFile file,
   ) async {
     try {
+      final fileName = file.name;
       final ext = fileName.split('.').last.toLowerCase();
       final mimeType = _getMimeType(ext);
 
+      final bytes = await file.readAsBytes();
+
       final formData = FormData.fromMap({
-        'file': await MultipartFile.fromFile(
-          file.path,
+        'file': MultipartFile.fromBytes(
+          bytes,
           filename: fileName,
-          contentType: DioMediaType.parse(mimeType),
+          contentType: MediaType.parse(mimeType),
         ),
       });
 
       final response = await ApiClient.dio.post(
         '/tickets/$ticketId/attachments',
         data: formData,
+        options: Options(
+          contentType: 'multipart/form-data',
+        ),
       );
 
       if (response.data['success'] == true) {
@@ -161,7 +178,7 @@ class SupabaseTicketRepository {
       }
     } catch (e) {
       print('❌ uploadAttachment error: $e');
-      throw Exception('Gagal mengunggah lampiran.');
+      throw Exception('Gagal mengunggah lampiran: $e');
     }
   }
 

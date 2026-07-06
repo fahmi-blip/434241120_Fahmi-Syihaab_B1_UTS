@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import '../models/ticket_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
@@ -212,7 +214,7 @@ class MockTicketRepository {
 
   Future<bool> get _isAdmin async {
     final role = await _currentRole;
-    return role == 'admin' || role == 'helpdesk';
+    return role == 'admin' || role == 'helpdesk' || role == 'support';
   }
 
   /// Get all tickets
@@ -258,6 +260,7 @@ class MockTicketRepository {
     required String description,
     String? category,
     String priority = 'medium',
+    List<XFile> files = const [],
   }) async {
     await _initData();
     await Future.delayed(const Duration(milliseconds: 400));

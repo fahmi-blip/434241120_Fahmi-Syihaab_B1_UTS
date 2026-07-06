@@ -27,7 +27,7 @@ class _TicketTrackingScreenState extends ConsumerState<TicketTrackingScreen> {
   void initState() {
     super.initState();
     _repo = ref.read(ticketRepoProvider);
-    _load();
+    Future.microtask(() => _load());
   }
 
   Future<void> _load() async {
@@ -36,7 +36,10 @@ class _TicketTrackingScreenState extends ConsumerState<TicketTrackingScreen> {
       final prefs = await SharedPreferences.getInstance();
       final role = prefs.getString('user_role') ?? 'user';
 
-      final tickets = await _repo.getTickets();
+      // Refresh global ticket state
+      await ref.read(ticketsProvider.notifier).refresh();
+
+      final tickets = ref.read(ticketListProvider);
       // Filter: only active tickets (not closed)
       final activeTickets = tickets.where((t) => t.status != 'closed').toList();
       // Sort by updated date (most recent first)
@@ -137,7 +140,7 @@ class _TicketTrackingScreenState extends ConsumerState<TicketTrackingScreen> {
                           ticket: t,
                           isDark: isDark,
                           isAdmin:
-                              _userRole == 'admin' || _userRole == 'helpdesk',
+                              _userRole == 'admin' || _userRole == 'helpdesk' || _userRole == 'support',
                           onViewDetail: () => context.push('/tickets/${t.id}'),
                           onViewHistory: () =>
                               context.push('/tickets/${t.id}/history'),

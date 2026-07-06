@@ -280,10 +280,9 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     child: Row(
                       children: [
-                        const _IconContainer(
+                        _IconContainer(
                           icon: Icons.dark_mode_outlined,
-                          bgColor: Color.fromARGB(255, 248, 249, 251),
-                          iconColor: Color.fromARGB(255, 98, 102, 106),
+                          isDark: isDark,
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -340,8 +339,6 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
                   // Accent Color Selection
                   _SettingItemTile(
                     icon: Icons.palette_outlined,
-                    iconBgColor: Color.fromARGB(255, 248, 249, 251),
-                    iconColor: Color.fromARGB(255, 98, 102, 106),
                     label: 'Warna Aksen',
                     value: _accentColorName,
                     isDark: isDark,
@@ -368,8 +365,6 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
                 children: [
                   _SettingSwitchTile(
                     icon: Icons.notifications_none_rounded,
-                    iconBgColor: Color.fromARGB(255, 248, 249, 251),
-                    iconColor: Color.fromARGB(255, 98, 102, 106),
                     label: 'Notifikasi Push',
                     value: _pushNotifications,
                     isDark: isDark,
@@ -381,8 +376,6 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
                   const _Divider(),
                   _SettingSwitchTile(
                     icon: Icons.assignment_turned_in_outlined,
-                    iconBgColor: Color.fromARGB(255, 248, 249, 251),
-                    iconColor: Color.fromARGB(255, 98, 102, 106),
                     label: 'Update Tiket Baru',
                     value: _ticketNotifications,
                     isDark: isDark,
@@ -394,8 +387,6 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
                   const _Divider(),
                   _SettingSwitchTile(
                     icon: Icons.volume_up_outlined,
-                    iconBgColor: Color.fromARGB(255, 248, 249, 251),
-                    iconColor: Color.fromARGB(255, 98, 102, 106),
                     label: 'Suara Notifikasi',
                     value: _soundEnabled,
                     isDark: isDark,
@@ -425,8 +416,6 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
                 children: [
                   _SettingItemTile(
                     icon: Icons.language_rounded,
-                    iconBgColor: Color.fromARGB(255, 248, 249, 251),
-                    iconColor: Color.fromARGB(255, 98, 102, 106),
                     label: 'Bahasa',
                     value: _language,
                     isDark: isDark,
@@ -435,8 +424,6 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
                   const _Divider(),
                   _SettingItemTile(
                     icon: Icons.cleaning_services_outlined,
-                    iconBgColor: Color.fromARGB(255, 248, 249, 251),
-                    iconColor: Color.fromARGB(255, 98, 102, 106),
                     label: 'Bersihkan Cache',
                     isDark: isDark,
                     onTap: _clearCache,
@@ -474,40 +461,8 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
       ),
     );
   }
-
-  void _showDialog(String title, String content) {
-    final isDark = context.isDark;
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: isDark ? AppTheme.dark1 : AppTheme.surface0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(
-          title,
-          style: TextStyle(
-            fontWeight: FontWeight.w700,
-            fontSize: 16,
-            color: isDark ? AppTheme.white : AppTheme.black,
-          ),
-        ),
-        content: Text(
-          content,
-          style: TextStyle(
-            fontSize: 14,
-            height: 1.5,
-            color: isDark ? AppTheme.textSecondaryDark : AppTheme.textSecondary,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('OK', style: TextStyle(fontWeight: FontWeight.w700)),
-          ),
-        ],
-      ),
-    );
-  }
 }
+
 
 class _SectionLabel extends StatelessWidget {
   final String text;
@@ -530,13 +485,11 @@ class _SectionLabel extends StatelessWidget {
 
 class _IconContainer extends StatelessWidget {
   final IconData icon;
-  final Color bgColor;
-  final Color iconColor;
+  final bool isDark;
 
   const _IconContainer({
     required this.icon,
-    required this.bgColor,
-    required this.iconColor,
+    required this.isDark,
   });
 
   @override
@@ -545,10 +498,14 @@ class _IconContainer extends StatelessWidget {
       width: 32,
       height: 32,
       decoration: BoxDecoration(
-        color: bgColor,
+        color: isDark ? AppTheme.dark2 : AppTheme.surface1,
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Icon(icon, size: 16, color: iconColor),
+      child: Icon(
+        icon,
+        size: 16,
+        color: isDark ? AppTheme.textSecondaryDark : AppTheme.textSecondary,
+      ),
     );
   }
 }
@@ -572,8 +529,6 @@ class _Divider extends StatelessWidget {
 
 class _SettingItemTile extends StatelessWidget {
   final IconData icon;
-  final Color iconBgColor;
-  final Color iconColor;
   final String label;
   final String? value;
   final bool isDark;
@@ -581,8 +536,6 @@ class _SettingItemTile extends StatelessWidget {
 
   const _SettingItemTile({
     required this.icon,
-    required this.iconBgColor,
-    required this.iconColor,
     required this.label,
     this.value,
     required this.isDark,
@@ -598,7 +551,7 @@ class _SettingItemTile extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
-            _IconContainer(icon: icon, bgColor: iconBgColor, iconColor: iconColor),
+            _IconContainer(icon: icon, isDark: isDark),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -635,8 +588,6 @@ class _SettingItemTile extends StatelessWidget {
 
 class _SettingSwitchTile extends StatelessWidget {
   final IconData icon;
-  final Color iconBgColor;
-  final Color iconColor;
   final String label;
   final bool value;
   final bool isDark;
@@ -644,8 +595,6 @@ class _SettingSwitchTile extends StatelessWidget {
 
   const _SettingSwitchTile({
     required this.icon,
-    required this.iconBgColor,
-    required this.iconColor,
     required this.label,
     required this.value,
     required this.isDark,
@@ -658,7 +607,7 @@ class _SettingSwitchTile extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
-          _IconContainer(icon: icon, bgColor: iconBgColor, iconColor: iconColor),
+          _IconContainer(icon: icon, isDark: isDark),
           const SizedBox(width: 12),
           Expanded(
             child: Text(

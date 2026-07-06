@@ -37,7 +37,7 @@ final appRouter = GoRouter(
       }
 
       // Hanya admin/helpdesk yang bisa akses admin pages
-      if (loc.startsWith('/admin/') && role != 'admin' && role != 'helpdesk') {
+      if (loc.startsWith('/admin/') && role != 'admin' && role != 'helpdesk' && role != 'support') {
         return '/tickets';
       }
     }

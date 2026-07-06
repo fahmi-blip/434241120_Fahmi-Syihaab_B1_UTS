@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import '../models/ticket_model.dart';
 import '../models/user_model.dart';
 import '../repositories/supabase_auth_repository.dart';
@@ -18,6 +20,11 @@ final authRepoProvider = Provider<SupabaseAuthRepository>((ref) {
 final authStateProvider = StateProvider<bool>((ref) => false);
 
 final currentUserProvider = FutureProvider<UserModel?>((ref) async {
+  final authState = ref.watch(authNotifierProvider);
+  if (authState.isAuthenticated) {
+    return authState.user;
+  }
+
   final authRepo = ref.watch(authRepoProvider);
   final userId = await authRepo.getUserId();
   final name = await authRepo.getUserName();
@@ -46,7 +53,18 @@ final authNotifierProvider =
 class AuthNotifier extends StateNotifier<AuthState> {
   final SupabaseAuthRepository _authRepo;
 
-  AuthNotifier(this._authRepo) : super(AuthState.initial());
+  AuthNotifier(this._authRepo) : super(AuthState.initial()) {
+    _tryRestoreSession();
+  }
+
+  Future<void> _tryRestoreSession() async {
+    try {
+      final user = await _authRepo.getCurrentUser();
+      if (user != null) {
+        state = AuthState.authenticated(user);
+      }
+    } catch (_) {}
+  }
 
   bool get isAuthenticated => state.isAuthenticated;
   UserModel? get user => state.user;
@@ -132,7 +150,8 @@ class AuthState {
 final ticketsProvider =
     StateNotifierProvider<TicketsNotifier, TicketsState>((ref) {
   final repo = ref.read(ticketRepoProvider);
-  return TicketsNotifier(repo);
+  final authState = ref.watch(authNotifierProvider);
+  return TicketsNotifier(repo, authState.isAuthenticated);
 });
 
 final ticketListProvider = Provider<List<TicketModel>>((ref) {
@@ -141,6 +160,11 @@ final ticketListProvider = Provider<List<TicketModel>>((ref) {
 
 final ticketStatsProvider = Provider<Map<String, int>>((ref) {
   return ref.watch(ticketsProvider).stats;
+});
+
+final activeTrackingCountProvider = Provider<int>((ref) {
+  final tickets = ref.watch(ticketListProvider);
+  return tickets.where((t) => t.status != 'closed').length;
 });
 
 final filteredTicketsProvider =
@@ -152,9 +176,12 @@ final filteredTicketsProvider =
 
 class TicketsNotifier extends StateNotifier<TicketsState> {
   final SupabaseTicketRepository _repo;
+  final bool isAuthenticated;
 
-  TicketsNotifier(this._repo) : super(TicketsState.initial()) {
-    _loadTickets();
+  TicketsNotifier(this._repo, this.isAuthenticated) : super(TicketsState.initial()) {
+    if (isAuthenticated) {
+      _loadTickets();
+    }
   }
 
   Future<void> _loadTickets() async {
@@ -207,6 +234,7 @@ class TicketsNotifier extends StateNotifier<TicketsState> {
     required String description,
     String? category,
     String priority = 'medium',
+    List<XFile> files = const [],
   }) async {
     state = state.copyWith(isSubmitting: true);
 
@@ -216,6 +244,7 @@ class TicketsNotifier extends StateNotifier<TicketsState> {
         description: description,
         category: category,
         priority: priority,
+        files: files,
       );
 
       await _loadTickets();
@@ -312,14 +341,18 @@ final unreadCountProvider = StateProvider<int>((ref) => 0);
 final notificationNotifierProvider =
     StateNotifierProvider<NotificationNotifier, int>((ref) {
   final repo = ref.read(ticketRepoProvider);
-  return NotificationNotifier(repo);
+  final authState = ref.watch(authNotifierProvider);
+  return NotificationNotifier(repo, authState.isAuthenticated);
 });
 
 class NotificationNotifier extends StateNotifier<int> {
   final SupabaseTicketRepository _repo;
+  final bool isAuthenticated;
 
-  NotificationNotifier(this._repo) : super(0) {
-    _loadUnreadCount();
+  NotificationNotifier(this._repo, this.isAuthenticated) : super(0) {
+    if (isAuthenticated) {
+      _loadUnreadCount();
+    }
   }
 
   Future<void> _loadUnreadCount() async {
